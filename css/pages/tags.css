@@ -1,0 +1,364 @@
+.tag-page .title-1 {
+  margin-top: 0;
+}
+
+.tags-cloud .item {
+  display: inline-block;
+  margin: 0 15px 5px 0;
+  line-height: 30px;
+  color: #1fa94a;
+  text-decoration: underline;
+}
+
+.tags-cloud .item:hover {
+  color: #1fa94a;
+  text-decoration: none;
+}
+
+.tag-element {
+  margin-bottom: 16px;
+}
+
+.tag-element .item-wrap {
+  position: relative;
+  width: 236px;
+  height: 300px;
+  border: solid 2px #e9e9e9;
+}
+
+.tag-element .item-padding {
+  padding: 10px 10px 54px;
+}
+
+.tag-element .item-type {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: 90px;
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 30px;
+  color: #fff;
+}
+
+.tag-element .item.red-forecast .item-type {
+  background: #eb001b;
+}
+
+.tag-element .item.red-forecast .item-top.image {
+  border-top-right-radius: 50px;
+}
+
+.tag-element .item.purple-forecast .item-type {
+  background: #601dc0;
+}
+
+.tag-element .item.purple-forecast .item-top.image {
+  border-top-right-radius: 50px;
+}
+
+.tag-element .item.green-forecast .item-type {
+  background: #1fa94a;
+}
+
+.tag-element .item.green-forecast .item-top.image {
+  border-top-right-radius: 50px;
+}
+
+.tag-element .item.yellow-forecast .item-type {
+  background: #f5a623;
+}
+
+.tag-element .item.yellow-forecast .item-top.image {
+  border-top-right-radius: 50px;
+}
+
+.tag-element .item-top {
+  margin-bottom: 20px;
+  font-size: 0;
+  line-height: 0;
+  text-align: justify;
+}
+
+.tag-element .item-top.image {
+  height: 100px;
+  margin-bottom: 0;
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: cover;
+}
+
+.tag-element .item-top:after {
+  content: ' ';
+  display: inline-block;
+  width: 100%;
+  vertical-align: middle;
+}
+
+.tag-element .item-top > * {
+  display: inline-block;
+  font-size: initial;
+  line-height: normal;
+  vertical-align: middle;
+}
+
+.tag-element .item-logo {
+  width: 70px;
+  height: 70px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.tag-element .item-versus {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+.tag-element .item-title {
+  z-index: 2;
+  position: relative;
+  display: block;
+  height: 61px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.43;
+  text-decoration: none;
+  overflow: hidden;
+  color: #000;
+}
+
+.tag-element .item-title:hover {
+  color: #000;
+}
+
+.tag-element .item-author {
+  margin-bottom: 13px;
+}
+
+.tag-element .item-author-photo {
+  display: inline-block;
+  vertical-align: middle;
+  width: 28px;
+  height: 28px;
+  margin-right: 7px;
+}
+
+.tag-element .item-author-title {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.tag-element .item-author-from {
+  display: block;
+  font-size: 12px;
+  color: #979797;
+}
+
+.tag-element .item-video {
+  width: 19px;
+  height: 11px;
+  margin: 0 14px 0 4px;
+}
+
+.tag-element .item-video .s-icon {
+  display: block;
+  width: 19px;
+  height: 11px;
+  color: #1fa94a;
+}
+
+.tag-element .item-info {
+  font-size: 12px;
+  font-weight: 300;
+  color: #7f7f7f;
+}
+
+.tag-element .item-bottom {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 0 10px;
+  line-height: 41px;
+  border-top: solid 2px #e9e9e9;
+}
+
+.tag-element .item-bottom .s-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+
+.tag-element .item-coeff {
+  font-weight: bold;
+  -ms-flex: none;
+      flex: none;
+}
+
+.tag-element .item-time {
+  font-size: 12px;
+  font-weight: 300;
+  color: #666;
+}
+
+.tag-element .item-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tag-element .item:hover .item-border-wrap {
+  box-shadow: 0 0 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.tag-element .item:focus, .tag-element .item:hover {
+  text-decoration: none;
+  color: #000;
+}
+
+.tag-element .item-border-wrap {
+  border-radius: 10px;
+  overflow: hidden;
+  transition: 0.6s;
+}
+
+.tag-element .item-wrap {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  transition: 0.6s ease;
+}
+
+.tag-element .item-top.image {
+  left: -2px;
+  top: -2px;
+  position: relative;
+  width: calc(100% + 4px);
+}
+
+.tag-element .item-title {
+  height: auto;
+}
+
+.tag-element .item-bottom {
+  background: #fff;
+  border-radius: 0 0 10px 10px;
+}
+
+.tag-element .item.forecast-type:hover .item-wrap {
+  padding-top: 30px;
+}
+
+.tags-elements .tag-element {
+  width: 33.33333333%;
+}
+
+@media (max-width: 768px) {
+  .tags-elements .tag-element {
+    width: 50%;
+  }
+}
+
+@media (max-width: 550px) {
+  .tags-elements .tag-element {
+    width: 100%;
+    height: auto !important;
+    max-width: 414px;
+    margin: 0 auto 30px;
+  }
+}
+
+@media (min-width: 550px) {
+  .tags-elements .row {
+    margin-left: -8px;
+    margin-right: -8px;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: start;
+        align-items: flex-start;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+  }
+  .tag-element {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .tag-element .item-title {
+    height: 68px;
+  }
+  .tag-element .item-wrap {
+    height: 290px;
+  }
+}
+
+@media (min-width: 550px) {
+  .tag-element .item-padding {
+    padding: 6px 10px 54px;
+  }
+  .tag-element .item-title {
+    margin-bottom: 10px;
+    line-height: 1.23;
+  }
+  .tag-element .item-author {
+    margin-bottom: 6px;
+  }
+}
+
+@media (min-width: 992px) {
+  .tag-element {
+    margin-bottom: 15px;
+  }
+  .tag-element .item-wrap {
+    width: auto;
+    height: 290px;
+  }
+  .tag-element .item-padding {
+    padding: 9px 10px 46px;
+  }
+  .tag-element .item-top.image {
+    height: 100px;
+  }
+  .tag-element .item-title, .tag-element .item-author {
+    margin-bottom: 9px;
+  }
+}
+
+.tag-item-nimg {
+  margin-top: -2px;
+}
+
+.tag-item-news {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+}
+
+.tag-item-news .item-wrap:before,
+.tag-item-article .item-wrap:before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 60px;
+  box-shadow: inset 0 -60px 50px #fff;
+  border-radius: 0 0 10px 10px;
+}
+
+.tag-item-article .item-wrap {
+  overflow: hidden;
+}
+
+.tag-item-article .item-wrap:before {
+  height: 30px;
+  box-shadow: inset 0 -30px 50px #fff;
+}
