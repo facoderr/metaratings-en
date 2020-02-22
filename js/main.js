@@ -1,6 +1,50 @@
 /******/ (function(modules) { // webpackBootstrap
+/******/ 	// install a JSONP callback for chunk loading
+/******/ 	function webpackJsonpCallback(data) {
+/******/ 		var chunkIds = data[0];
+/******/ 		var moreModules = data[1];
+/******/
+/******/
+/******/ 		// add "moreModules" to the modules object,
+/******/ 		// then flag all "chunkIds" as loaded and fire callback
+/******/ 		var moduleId, chunkId, i = 0, resolves = [];
+/******/ 		for(;i < chunkIds.length; i++) {
+/******/ 			chunkId = chunkIds[i];
+/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 				resolves.push(installedChunks[chunkId][0]);
+/******/ 			}
+/******/ 			installedChunks[chunkId] = 0;
+/******/ 		}
+/******/ 		for(moduleId in moreModules) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+/******/ 				modules[moduleId] = moreModules[moduleId];
+/******/ 			}
+/******/ 		}
+/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
+/******/
+/******/ 		while(resolves.length) {
+/******/ 			resolves.shift()();
+/******/ 		}
+/******/
+/******/ 	};
+/******/
+/******/
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
+/******/
+/******/ 	// object to store loaded and loading chunks
+/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 	// Promise = chunk loading, 0 = chunk loaded
+/******/ 	var installedChunks = {
+/******/ 		"main": 0
+/******/ 	};
+/******/
+/******/
+/******/
+/******/ 	// script path function
+/******/ 	function jsonpScriptSrc(chunkId) {
+/******/ 		return __webpack_require__.p + "" + ({}[chunkId]||chunkId) + ".js"
+/******/ 	}
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -26,6 +70,67 @@
 /******/ 		return module.exports;
 /******/ 	}
 /******/
+/******/ 	// This file contains only the entry chunk.
+/******/ 	// The chunk loading function for additional chunks
+/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
+/******/ 		var promises = [];
+/******/
+/******/
+/******/ 		// JSONP chunk loading for javascript
+/******/
+/******/ 		var installedChunkData = installedChunks[chunkId];
+/******/ 		if(installedChunkData !== 0) { // 0 means "already installed".
+/******/
+/******/ 			// a Promise means "currently loading".
+/******/ 			if(installedChunkData) {
+/******/ 				promises.push(installedChunkData[2]);
+/******/ 			} else {
+/******/ 				// setup Promise in chunk cache
+/******/ 				var promise = new Promise(function(resolve, reject) {
+/******/ 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
+/******/ 				});
+/******/ 				promises.push(installedChunkData[2] = promise);
+/******/
+/******/ 				// start chunk loading
+/******/ 				var script = document.createElement('script');
+/******/ 				var onScriptComplete;
+/******/
+/******/ 				script.charset = 'utf-8';
+/******/ 				script.timeout = 120;
+/******/ 				if (__webpack_require__.nc) {
+/******/ 					script.setAttribute("nonce", __webpack_require__.nc);
+/******/ 				}
+/******/ 				script.src = jsonpScriptSrc(chunkId);
+/******/
+/******/ 				// create error before stack unwound to get useful stacktrace later
+/******/ 				var error = new Error();
+/******/ 				onScriptComplete = function (event) {
+/******/ 					// avoid mem leaks in IE.
+/******/ 					script.onerror = script.onload = null;
+/******/ 					clearTimeout(timeout);
+/******/ 					var chunk = installedChunks[chunkId];
+/******/ 					if(chunk !== 0) {
+/******/ 						if(chunk) {
+/******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 							var realSrc = event && event.target && event.target.src;
+/******/ 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 							error.name = 'ChunkLoadError';
+/******/ 							error.type = errorType;
+/******/ 							error.request = realSrc;
+/******/ 							chunk[1](error);
+/******/ 						}
+/******/ 						installedChunks[chunkId] = undefined;
+/******/ 					}
+/******/ 				};
+/******/ 				var timeout = setTimeout(function(){
+/******/ 					onScriptComplete({ type: 'timeout', target: script });
+/******/ 				}, 120000);
+/******/ 				script.onerror = script.onload = onScriptComplete;
+/******/ 				document.head.appendChild(script);
+/******/ 			}
+/******/ 		}
+/******/ 		return Promise.all(promises);
+/******/ 	};
 /******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
@@ -77,7 +182,17 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "js/";
+/******/ 	__webpack_require__.p = "/js/";
+/******/
+/******/ 	// on error function for async loading
+/******/ 	__webpack_require__.oe = function(err) { console.error(err); throw err; };
+/******/
+/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
+/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+/******/ 	jsonpArray.push = webpackJsonpCallback;
+/******/ 	jsonpArray = jsonpArray.slice();
+/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
+/******/ 	var parentJsonpFunction = oldJsonpFunction;
 /******/
 /******/
 /******/ 	// Load entry module and return exports
@@ -86,10 +201,133 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "../../node_modules/body-scroll-lock/lib/bodyScrollLock.min.js":
+/*!************************************************************************************************************************!*\
+  !*** C:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-en/node_modules/body-scroll-lock/lib/bodyScrollLock.min.js ***!
+  \************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!function (e, t) {
+  if (true) !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (t),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));else { var o; }
+}(this, function (exports) {
+  "use strict";
+
+  function r(e) {
+    if (Array.isArray(e)) {
+      for (var t = 0, o = Array(e.length); t < e.length; t++) {
+        o[t] = e[t];
+      }
+
+      return o;
+    }
+
+    return Array.from(e);
+  }
+
+  Object.defineProperty(exports, "__esModule", {
+    value: !0
+  });
+  var l = !1;
+
+  if ("undefined" != typeof window) {
+    var e = {
+      get passive() {
+        l = !0;
+      }
+
+    };
+    window.addEventListener("testPassive", null, e), window.removeEventListener("testPassive", null, e);
+  }
+
+  var d = "undefined" != typeof window && window.navigator && window.navigator.platform && /iP(ad|hone|od)/.test(window.navigator.platform),
+      c = [],
+      u = !1,
+      a = -1,
+      s = void 0,
+      v = void 0,
+      f = function f(t) {
+    return c.some(function (e) {
+      return !(!e.options.allowTouchMove || !e.options.allowTouchMove(t));
+    });
+  },
+      m = function m(e) {
+    var t = e || window.event;
+    return !!f(t.target) || 1 < t.touches.length || (t.preventDefault && t.preventDefault(), !1);
+  },
+      o = function o() {
+    setTimeout(function () {
+      void 0 !== v && (document.body.style.paddingRight = v, v = void 0), void 0 !== s && (document.body.style.overflow = s, s = void 0);
+    });
+  };
+
+  exports.disableBodyScroll = function (i, e) {
+    if (d) {
+      if (!i) return void console.error("disableBodyScroll unsuccessful - targetElement must be provided when calling disableBodyScroll on IOS devices.");
+
+      if (i && !c.some(function (e) {
+        return e.targetElement === i;
+      })) {
+        var t = {
+          targetElement: i,
+          options: e || {}
+        };
+        c = [].concat(r(c), [t]), i.ontouchstart = function (e) {
+          1 === e.targetTouches.length && (a = e.targetTouches[0].clientY);
+        }, i.ontouchmove = function (e) {
+          var t, o, n, r;
+          1 === e.targetTouches.length && (o = i, r = (t = e).targetTouches[0].clientY - a, !f(t.target) && (o && 0 === o.scrollTop && 0 < r ? m(t) : (n = o) && n.scrollHeight - n.scrollTop <= n.clientHeight && r < 0 ? m(t) : t.stopPropagation()));
+        }, u || (document.addEventListener("touchmove", m, l ? {
+          passive: !1
+        } : void 0), u = !0);
+      }
+    } else {
+      n = e, setTimeout(function () {
+        if (void 0 === v) {
+          var e = !!n && !0 === n.reserveScrollBarGap,
+              t = window.innerWidth - document.documentElement.clientWidth;
+          e && 0 < t && (v = document.body.style.paddingRight, document.body.style.paddingRight = t + "px");
+        }
+
+        void 0 === s && (s = document.body.style.overflow, document.body.style.overflow = "hidden");
+      });
+      var o = {
+        targetElement: i,
+        options: e || {}
+      };
+      c = [].concat(r(c), [o]);
+    }
+
+    var n;
+  }, exports.clearAllBodyScrollLocks = function () {
+    d ? (c.forEach(function (e) {
+      e.targetElement.ontouchstart = null, e.targetElement.ontouchmove = null;
+    }), u && (document.removeEventListener("touchmove", m, l ? {
+      passive: !1
+    } : void 0), u = !1), c = [], a = -1) : (o(), c = []);
+  }, exports.enableBodyScroll = function (t) {
+    if (d) {
+      if (!t) return void console.error("enableBodyScroll unsuccessful - targetElement must be provided when calling enableBodyScroll on IOS devices.");
+      t.ontouchstart = null, t.ontouchmove = null, c = c.filter(function (e) {
+        return e.targetElement !== t;
+      }), u && 0 === c.length && (document.removeEventListener("touchmove", m, l ? {
+        passive: !1
+      } : void 0), u = !1);
+    } else (c = c.filter(function (e) {
+      return e.targetElement !== t;
+    })).length || o();
+  };
+});
+
+/***/ }),
+
 /***/ "../../node_modules/dom7/dist/dom7.modular.js":
-/*!********************************************************************************************************!*\
-  !*** c:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-new/node_modules/dom7/dist/dom7.modular.js ***!
-  \********************************************************************************************************/
+/*!*******************************************************************************************************!*\
+  !*** C:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-en/node_modules/dom7/dist/dom7.modular.js ***!
+  \*******************************************************************************************************/
 /*! exports provided: $, addClass, removeClass, hasClass, toggleClass, attr, removeAttr, prop, data, removeData, dataset, val, transform, transition, on, off, once, trigger, transitionEnd, animationEnd, width, outerWidth, height, outerHeight, offset, hide, show, styles, css, toArray, each, forEach, filter, map, html, text, is, indexOf, index, eq, append, appendTo, prepend, prependTo, insertBefore, insertAfter, next, nextAll, prev, prevAll, siblings, parent, parents, closest, find, children, remove, detach, add, empty, scrollTo, scrollTop, scrollLeft, animate, stop, click, blur, focus, focusin, focusout, keyup, keydown, keypress, submit, change, mousedown, mousemove, mouseup, mouseenter, mouseleave, mouseout, mouseover, touchstart, touchend, touchmove, resize, scroll */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1983,9 +2221,9 @@ function scroll() {
 /***/ }),
 
 /***/ "../../node_modules/jquery/dist/jquery.js":
-/*!****************************************************************************************************!*\
-  !*** c:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-new/node_modules/jquery/dist/jquery.js ***!
-  \****************************************************************************************************/
+/*!***************************************************************************************************!*\
+  !*** C:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-en/node_modules/jquery/dist/jquery.js ***!
+  \***************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -11314,9 +11552,9 @@ function scroll() {
 /***/ }),
 
 /***/ "../../node_modules/js-cookie/src/js.cookie.js":
-/*!*********************************************************************************************************!*\
-  !*** c:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-new/node_modules/js-cookie/src/js.cookie.js ***!
-  \*********************************************************************************************************/
+/*!********************************************************************************************************!*\
+  !*** C:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-en/node_modules/js-cookie/src/js.cookie.js ***!
+  \********************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -11503,9 +11741,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;function _type
 /***/ }),
 
 /***/ "../../node_modules/ssr-window/dist/ssr-window.esm.js":
-/*!****************************************************************************************************************!*\
-  !*** c:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-new/node_modules/ssr-window/dist/ssr-window.esm.js ***!
-  \****************************************************************************************************************/
+/*!***************************************************************************************************************!*\
+  !*** C:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-en/node_modules/ssr-window/dist/ssr-window.esm.js ***!
+  \***************************************************************************************************************/
 /*! exports provided: window, document */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -11593,9 +11831,9 @@ var win = typeof window === 'undefined' ? {
 /***/ }),
 
 /***/ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js":
-/*!******************************************************************************************************************!*\
-  !*** c:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-new/node_modules/swiper/dist/js/swiper.esm.bundle.js ***!
-  \******************************************************************************************************************/
+/*!*****************************************************************************************************************!*\
+  !*** C:/Users/Farkhad/Desktop/GitHub/metaratings-v2/markup-en/node_modules/swiper/dist/js/swiper.esm.bundle.js ***!
+  \*****************************************************************************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -19219,400 +19457,67 @@ module.exports = function (module) {
 
 /***/ }),
 
-/***/ "../blocks/banner/script.js":
-/*!**********************************!*\
-  !*** ../blocks/banner/script.js ***!
-  \**********************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ "../blocks/bk-search/script.js":
+/*!*************************************!*\
+  !*** ../blocks/bk-search/script.js ***!
+  \*************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ "../../node_modules/js-cookie/src/js.cookie.js");
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);
-
-$(function () {
-  $('body').on('click', '.popup-footer-close', function () {
-    $('.popup-in-footer').fadeOut(300);
+/* WEBPACK VAR INJECTION */(function($) {$(function () {
+  var bkSearch = $('.bk-search');
+  if (!bkSearch) return;
+  var doc = $(document),
+      bkSearchList = $('.js-bk-search-list'),
+      bkSearchLink = '.js-bk-search-link',
+      bkSearchBtn = '.js-bk-search-btn',
+      bkSearchInput = $('.js-bk-search-input'),
+      bkSearchResult = $('.js-bk-search-result'),
+      bkSearchVal = $('.js-bk-search-val');
+  doc.on('click', bkSearchBtn, function () {
+    $(this).parent().find(bkSearchList).toggleClass('is-active');
+    $(this).parent().find(bkSearchInput).val('').toggleClass('is-active');
   });
+  doc.on('click', bkSearchLink, function () {
+    var bkSearchData = $(this).data('bookmaker');
+    bkSearchVal.val(bkSearchData);
+    $(bkSearchLink).removeClass('is-select');
+    $(this).addClass('is-select');
+    $(this).parents('.bk-search-field').find(bkSearchList).removeClass('is-active');
+    $(this).parents('.bk-search-field').find(bkSearchInput).val('').removeClass('is-active');
+    $(this).parents('.bk-search-field').find(bkSearchResult).removeClass('is-active');
+    $(this).parents('.bk-search-field').find(bkSearchResult).slideUp(300);
+  });
+  bkSearchInput.keyup(function () {
+    var $this = $(this),
+        $value = $(this).val();
+    $this.parent().find('li').each(function () {
+      var reg = new RegExp($value, 'i');
 
-  function loadBanners() {
-    var banners = $('.banner');
-    var partnerTag = $('.banner.banner-custom').data('tag');
-    if (banners.length <= 0) return;
-    var types = [];
-    banners.each(function () {
-      var type = $(this).data('type');
-      types.push({
-        type: type,
-        partnerTag: type === 'CUSTOM' ? $(this).data('tag') : 0
-      });
-    });
-    var data = {
-      action: 'get-banners',
-      banners: types,
-      partnerTag: partnerTag
-    };
-    $.get('/local/components/metaratings/banner/ajax.php', data, function (answer) {
-      $.each(types, function (key, type) {
-        var banner = banners.filter('[data-type=' + type.type + ']');
+      if (!$(this).text().match(reg)) {
+        $(this).hide();
 
-        if (answer[type.type]) {
-          banner.html(answer[type.type]);
-        } else {
-          banner.remove();
+        if ($this.parent().find('li:visible').length === 0) {
+          $this.parent().removeClass('is-active');
+          $this.parent().find(bkSearchResult).slideUp(300);
         }
-      });
-    }, 'json');
-  }
-
-  function showPopupBanners() {
-    var popup = $('.footer-popup-position');
-    if (popup.length <= 0) return;
-    popup.after(function () {
-      return '<div class="banner popup-in-footer" data-type="POPUP_IN_FOOTER"></div>';
-    });
-    popup.remove();
-    loadBanners();
-  }
-
-  loadBanners();
-  $(document).on('load-more-finish', loadBanners);
-  $(document).on('show-popup-banner', showPopupBanners);
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
-
-/***/ }),
-
-/***/ "../blocks/block-sports/script.js":
-/*!****************************************!*\
-  !*** ../blocks/block-sports/script.js ***!
-  \****************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function($) {$(function () {
-  $('.block-sports .js-toggle').on('click', function () {
-    $(this).toggleClass('is-opened');
-  });
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
-
-/***/ }),
-
-/***/ "../blocks/catfish/script.js":
-/*!***********************************!*\
-  !*** ../blocks/catfish/script.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function($) {$(function () {
-  $('.close_catFish').on('click', function () {
-    $('.catfish').fadeOut(300);
-    $('.footer').addClass("padding-footer");
-  });
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
-
-/***/ }),
-
-/***/ "../blocks/feed-bar/script.js":
-/*!************************************!*\
-  !*** ../blocks/feed-bar/script.js ***!
-  \************************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ "../../node_modules/js-cookie/src/js.cookie.js");
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);
-
-$(function () {
-  /** Не показываем feed на мобиле */
-  if ($(window).width() <= 992) {
-    return;
-  }
-
-  var feed = $('#feed-bar');
-  if (feed.length <= 0) return;
-  var list = feed.find('.feed-bar-list'),
-      head = feed.find('.feed-bar-head'),
-      form = feed.find('.feed-setting-form'),
-      settings = feed.data('settings'),
-      page = 2,
-      ajaxIn = false,
-      scrollbarWidth = $(window).outerWidth() - $(window).innerWidth(),
-      cookieName = 'BITRIX_SM_FILTER';
-  settings = $.extend({}, {
-    ajaxPath: '',
-    // путь по которому будет происходить ajax запрос
-    pagination: 'PAGEN_1',
-    // параметр для постраничной навигации
-    autoLoad: false // загружать данные при первой загрузке страницы
-
-  }, settings);
-  list.css('margin-right', -scrollbarWidth);
-  $(window).resize(function () {
-    list.css('margin-right', -scrollbarWidth);
-  });
-  feed.find('.js-setting-open').on('click', openSettings);
-  feed.find('.js-setting-close').on('click', closeSettings); //feed.find('.js-feed-totop').on('click', toTopFeed);
-  //feed.find('.js-feed-toback').on('click', toBackFeed);
-
-  feed.find('.feed-box-subtitle').each(function () {
-    $(this).toggleClass('is-max', $(this).outerHeight() >= 65);
-  });
-  /** Устанавливаем значения фильтра при загрузке страницы */
-
-  setFilterValues();
-
-  if (settings.autoLoad) {
-    var data = {
-      types: getTypesByFilter(form.serialize())
-    };
-    removeItems();
-    $.get(settings.ajaxPath, data, function (html) {
-      feed.removeClass('is-active');
-      addItems(html);
-    });
-  }
-
-  list.on('scroll', function () {
-    head.css({
-      'transform': 'translateY(-' + $(this).scrollTop() + 'px)'
-    });
-    head.toggleClass('is-active', $(this).scrollTop() >= 1); //feed.find('.js-feed-totop').toggleClass('is-active', $(this).scrollTop() >= 700);
-
-    if (!ajaxIn && list.scrollTop() + list.outerHeight() + list.prop('scrollHeight') * 0.2 >= list.prop('scrollHeight')) {
-      ajaxIn = true;
-      var _data = {
-        types: getTypesByFilter(form.serialize())
-      };
-      _data[settings.pagination] = page;
-      $.get(settings.ajaxPath, _data, function (html) {
-        page++;
-        ajaxIn = false;
-        addItems(html);
-      });
-    }
-  });
-  feed.find('.feed-setting-reset').on('click', function (e) {
-    e.preventDefault();
-    form.find('input[type=checkbox]').prop('checked', true);
-    js_cookie__WEBPACK_IMPORTED_MODULE_0___default.a.remove(cookieName);
-    $.get(settings.ajaxPath, function (html) {
-      page = 2;
-      closeSettings();
-      removeItems();
-      addItems(html);
-    });
-  });
-  feed.find('.feed-setting-apply').on('click', function (e) {
-    e.preventDefault();
-    /** Если не выбран ни один чекбокс, проставляем их все и загружаем все типы */
-
-    if (form.find('input[type=checkbox]:checked').length === 0) {
-      form.find('input[type=checkbox]').prop('checked', true);
-    }
-
-    var filter = form.serialize(),
-        types = getTypesByFilter(filter);
-    js_cookie__WEBPACK_IMPORTED_MODULE_0___default.a.set(cookieName, filter, {
-      expires: 30
-    });
-    $.get(settings.ajaxPath, {
-      types: types
-    }, function (html) {
-      page = 2;
-      closeSettings();
-      removeItems();
-      addItems(html);
-    });
-  });
-
-  function removeItems() {
-    list.html('');
-  }
-
-  function addItems(html) {
-    list.append($(html).find('.feed-box'));
-  }
-
-  function openSettings() {
-    feed.addClass('is-active');
-    feed.find('.js-setting-open').addClass('is-active');
-    feed.find('.feed-setting').addClass('is-open');
-  }
-
-  function closeSettings() {
-    feed.removeClass('is-active');
-    feed.find('.js-setting-open').removeClass('is-active');
-    feed.find('.feed-setting').removeClass('is-open');
-  }
-
-  function getTypesByFilter(filter) {
-    if (!filter) return [];
-    var types = [];
-    $.each(filter.split('&'), function (key, value) {
-      types.push(value.split('=')[0]);
-    });
-    return types;
-  }
-
-  function setFilterValues() {
-    var types = getTypesByFilter(js_cookie__WEBPACK_IMPORTED_MODULE_0___default.a.get(cookieName)),
-        inputs = form.find('input[type=checkbox]');
-
-    if (types.length > 0) {
-      inputs.each(function () {
-        var input = $(this);
-        input.prop('checked', types.indexOf(input.attr('name')) !== -1);
-      });
-    } else {
-      inputs.prop('checked', true);
-    }
-  }
-  /*
-  function toTopFeed() {
-  let lastScroll = list.scrollTop();
-  list.animate({ scrollTop: 0 }, 1000);
-  $('.js-feed-toback').addClass('is-active').attr('data-scroll', lastScroll);
-  }
-  
-  function toBackFeed() {
-  list.animate({ scrollTop: $(this).attr('data-scroll') }, 1000);
-  $(this).removeClass('is-active');
-  }
-  */
-
-
-  var panel = $('#bx-panel');
-
-  if (panel.length > 0) {
-    var height = panel.outerHeight() + 60;
-    feed.css({
-      transition: 'top .5s ease-in-out',
-      top: $(document).scrollTop() > height ? 60 : height
-    });
-    $(document).on('scroll', function () {
-      feed.css('top', $(this).scrollTop() > height ? 60 : height);
-    });
-  }
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
-
-/***/ }),
-
-/***/ "../blocks/feed/script.js":
-/*!********************************!*\
-  !*** ../blocks/feed/script.js ***!
-  \********************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var swiper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swiper */ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js");
-
-$(function () {
-  var feed = $('#feed');
-  if (feed.length <= 0) return;
-  var list = feed.find('.js-feed-list'),
-      settings = feed.data('settings'),
-      selectTabs = feed.find('.js-type-select'),
-      ajaxIn = false,
-      page = 2,
-      type = '';
-  settings = $.extend({}, {
-    ajaxPath: '',
-    // путь по которому будет происходить ajax запрос
-    pagination: 'PAGEN_1' // параметр для постраничной навигации
-
-  }, settings);
-  selectTabs.on('click', function (e) {
-    e.preventDefault();
-    if (ajaxIn || $(this).hasClass('is-active')) return;
-    ajaxIn = true;
-    selectTabs.removeClass('is-active');
-    $(this).addClass('is-active');
-    type = $(this).data('type');
-    var data = {
-      types: [type]
-    };
-    removeItems();
-    $.get(settings.ajaxPath, data, function (html) {
-      page = 2;
-      ajaxIn = false;
-      addItems(html);
-    });
-  });
-  $(document).on('scroll', function () {
-    if (ajaxIn || $(document).scrollTop() + $(window).height() < $(document).height() - 2000) return;
-    ajaxIn = true;
-    var data = {
-      types: [type]
-    };
-    data[settings.pagination] = page;
-    $.get(settings.ajaxPath, data, function (html) {
-      page++;
-      ajaxIn = false;
-      addItems(html);
-    });
-  });
-
-  function removeItems() {
-    list.html('');
-  }
-
-  function addItems(html) {
-    list.append($(html).find('.feed-box'));
-  }
-});
-$(function () {
-  var feedEvent = $('.feed-event');
-  if (feedEvent.length === 0) return;
-  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](feedEvent.find('.swiper-container').get(0), {
-    slidesPerView: 'auto',
-    freeMode: true,
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true
-    }
-  });
-});
-$(function () {
-  var feedDaily = $('.feed-daily'),
-      btnLoadMore = feedDaily.find('.js-daily-more'),
-      load = false;
-  feedDaily.find('.js-daily-btn').on('click', function () {
-    $(this).toggleClass('is-active');
-
-    if ($(this).hasClass('is-active')) {
-      feedDaily.find('.js-daily-body').slideUp(300).css('opacity', 0);
-    } else {
-      feedDaily.find('.js-daily-body').slideDown(300).css('opacity', 1);
-    }
-  });
-  btnLoadMore.on('click', function (e) {
-    e.preventDefault();
-    if (load) return;
-    load = true;
-    var btn = $(this),
-        link = btn.attr('href');
-    $.get(link, function (html) {
-      load = false;
-      html = $(html);
-      btnLoadMore.before(html.find('.feed-daily-link'));
-      var newBtn = html.find('.js-daily-more');
-
-      if (newBtn.length > 0) {
-        btnLoadMore.attr('href', newBtn.attr('href'));
+      } else if ($value === '') {
+        $(this).hide();
+        $this.parent().removeClass('is-active');
+        $this.parent().find(bkSearchResult).slideUp(300);
       } else {
-        btnLoadMore.hide();
+        $(this).show();
+        setTimeout(function () {
+          $this.parent().addClass('is-active');
+          $this.parent().find(bkSearchResult).slideDown(300);
+        }, 100);
       }
     });
+  });
+  doc.on('mouseup touchend', function (e) {
+    if ($(e.target).closest(bkSearchInput).length || $(e.target).closest(bkSearchResult).length) return;
+    bkSearchResult.removeClass('is-active');
+    bkSearchResult.slideUp(300);
   });
 });
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
@@ -19665,168 +19570,6 @@ $(function () {
 
 /***/ }),
 
-/***/ "../blocks/forecast/script.js":
-/*!************************************!*\
-  !*** ../blocks/forecast/script.js ***!
-  \************************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var swiper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swiper */ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js");
-
-$(function () {
-  if ($('.forecast').length === 0) return;
-  var minCount = $(window).width() < 992 ? 2 : 3;
-  $('.forecast-best').each(function () {
-    if ($(this).find('.swiper-slide').length <= minCount) {
-      $(this).find('.swiper-container').addClass('is-disable');
-      $(this).find('.swiper-pagination').addClass('is-disable');
-    }
-  });
-  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"]('.forecast-best .swiper-container', {
-    slidesPerView: 'auto',
-    freeMode: true,
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev'
-    },
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true
-    },
-    breakpointsInverse: true,
-    breakpoints: {
-      992: {
-        slidesPerView: 3,
-        spaceBetween: 16,
-        freeMode: false
-      }
-    }
-  });
-  var forecastSliders = $('.forecast-slider');
-  forecastSliders.each(function () {
-    var forecastSlider = $(this);
-
-    if (forecastSlider.find('.swiper-slide').length > 1) {
-      new swiper__WEBPACK_IMPORTED_MODULE_0__["default"]('.forecast-slider .swiper-container', {
-        slidesPerView: 'auto',
-        freeMode: true,
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev'
-        },
-        breakpointsInverse: true,
-        breakpoints: {
-          992: {
-            slidesPerView: 3,
-            spaceBetween: 16,
-            freeMode: false
-          }
-        }
-      });
-    } else {
-      forecastSlider.addClass('swiper-not-init');
-      forecastSlider.find('.swiper-button-next').hide();
-      forecastSlider.find('.swiper-button-prev').hide();
-    }
-  });
-  var toggle = $('.js-forecast-toggle');
-  /** Открываем список элементов */
-
-  toggle.on('click', function () {
-    $(this).toggleClass('is-active');
-    $(this).parent().find('.forecast-menu').slideToggle(300);
-  });
-});
-/** Таймер вынесен отдельно, т.к. он есть на нескольких страницах, кроме .forecast */
-
-$(function () {
-  var time = Math.round(new Date().getTime() / 1000);
-  var timers = $('.js-forecast-timer').filter(function () {
-    var timer = $(this),
-        timeEnd = timer.data('end'),
-        bEnd = timeEnd < time;
-    return !bEnd;
-  });
-  if (timers.length <= 0) return;
-
-  if ('IntersectionObserver' in window) {
-    var updateTimers = [];
-    var timerObserver = new IntersectionObserver(function (entries, observer) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          updateTimers.push(entry.target);
-          timerObserver.unobserve(entry.target);
-        }
-      });
-    });
-    timers.each(function () {
-      timerObserver.observe(this);
-    });
-    updateTimersFunc($(updateTimers));
-    setInterval(function () {
-      updateTimersFunc($(updateTimers));
-    }, 1000);
-  } else {
-    updateTimersFunc(timers);
-    setInterval(function () {
-      updateTimersFunc(timers);
-    }, 1000);
-  }
-
-  function updateTimersFunc(updateTimers) {
-    if (!updateTimers) return;
-    var time = Math.round(new Date().getTime() / 1000);
-    updateTimers.each(function () {
-      var timer = $(this),
-          timeStart = timer.data('start'),
-          timeEnd = timer.data('end'),
-          bEnd = timeEnd < time,
-          bLive = timeStart <= time && timeEnd >= time;
-
-      if (bEnd) {
-        timer.find('svg').remove();
-        timer.find('span').text('Окончен');
-        timer.closest('.forecast-box').removeClass('forecast-live');
-      } else if (bLive) {
-        timer.find('svg').remove();
-        timer.find('span').text('Live');
-        timer.closest('.forecast-box').addClass('forecast-live');
-      } else {
-        var diff = timeStart - time,
-            houses = Math.floor(diff / 3600),
-            minutes = Math.floor((diff - houses * 3600) / 60),
-            seconds = diff - houses * 3600 - minutes * 60;
-        houses = leftPad(houses, 2, 0);
-        minutes = leftPad(minutes, 2, 0);
-        seconds = leftPad(seconds, 2, 0);
-
-        if (timer.find('svg').length > 0) {
-          timer.find('span').text(houses + ':' + minutes + ':' + seconds);
-        } else {
-          timer.html('<svg><use xlink:href="#clock"></use></svg><span>' + houses + ':' + minutes + ':' + seconds + '</span>');
-        }
-      }
-    });
-  }
-
-  function leftPad(str, length, pad) {
-    str = str + '';
-    pad = pad + '';
-
-    while (str.length < length) {
-      str = pad + str;
-    }
-
-    return str;
-  }
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
-
-/***/ }),
-
 /***/ "../blocks/header/script.js":
 /*!**********************************!*\
   !*** ../blocks/header/script.js ***!
@@ -19859,6 +19602,46 @@ $(function () {
 
 /***/ }),
 
+/***/ "../blocks/modal/script.js":
+/*!*********************************!*\
+  !*** ../blocks/modal/script.js ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function($) {$(function () {
+  var doc = $(document),
+      modal = $('.js-modal'),
+      modalVisible = $('.js-modal-visible'),
+      modalWrap = $('.js-modal-wrap'),
+      modalShow = '.js-modal-show',
+      modalHide = '.js-modal-hide',
+      modalTag;
+  doc.on('click', modalShow, function () {
+    if ($(this).data('modal') != undefined) {
+      modalTag = $(this).data('modal');
+    } else {
+      modalTag = $(this).attr('href');
+    }
+
+    $('.js-modal-visible' + modalTag).addClass('is-open');
+    $('.js-modal' + modalTag).fadeIn().addClass('is-open');
+    doc.on('mouseup touchend', function (e) {
+      if ($(e.target).closest(modalWrap).length) return;
+      modalVisible.removeClass('is-open');
+      modal.fadeOut().removeClass('is-open');
+    });
+    return false;
+  });
+  doc.on('click', modalHide, function () {
+    modalVisible.removeClass('is-open');
+    modal.fadeOut().removeClass('is-open');
+  });
+});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
 /***/ "../blocks/nav/script.js":
 /*!*******************************!*\
   !*** ../blocks/nav/script.js ***!
@@ -19866,380 +19649,478 @@ $(function () {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(jQuery, $) {function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-!function (e) {
-  var t = {};
-
-  function n(i) {
-    if (t[i]) return t[i].exports;
-    var r = t[i] = {
-      i: i,
-      l: !1,
-      exports: {}
-    };
-    return e[i].call(r.exports, r, r.exports, n), r.l = !0, r.exports;
-  }
-
-  n.m = e, n.c = t, n.d = function (e, t, i) {
-    n.o(e, t) || Object.defineProperty(e, t, {
-      enumerable: !0,
-      get: i
-    });
-  }, n.r = function (e) {
-    "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(e, Symbol.toStringTag, {
-      value: "Module"
-    }), Object.defineProperty(e, "__esModule", {
-      value: !0
-    });
-  }, n.t = function (e, t) {
-    if (1 & t && (e = n(e)), 8 & t) return e;
-    if (4 & t && "object" == _typeof(e) && e && e.__esModule) return e;
-    var i = Object.create(null);
-    if (n.r(i), Object.defineProperty(i, "default", {
-      enumerable: !0,
-      value: e
-    }), 2 & t && "string" != typeof e) for (var r in e) {
-      n.d(i, r, function (t) {
-        return e[t];
-      }.bind(null, r));
-    }
-    return i;
-  }, n.n = function (e) {
-    var t = e && e.__esModule ? function () {
-      return e.default;
-    } : function () {
-      return e;
-    };
-    return n.d(t, "a", t), t;
-  }, n.o = function (e, t) {
-    return Object.prototype.hasOwnProperty.call(e, t);
-  }, n.p = "", n(n.s = 0);
-}([function (e, t, n) {
-  n(1), e.exports = n(2);
-}, function (e, t) {
-  function n(e, t) {
-    var n = Object.keys(e);
-    return Object.getOwnPropertySymbols && n.push.apply(n, Object.getOwnPropertySymbols(e)), t && (n = n.filter(function (t) {
-      return Object.getOwnPropertyDescriptor(e, t).enumerable;
-    })), n;
-  }
-
-  function i(e, t, n) {
-    return t in e ? Object.defineProperty(e, t, {
-      value: n,
-      enumerable: !0,
-      configurable: !0,
-      writable: !0
-    }) : e[t] = n, e;
-  }
-
-  function r(e, t) {
-    for (var n = 0; n < t.length; n++) {
-      var i = t[n];
-      i.enumerable = i.enumerable || !1, i.configurable = !0, "value" in i && (i.writable = !0), Object.defineProperty(e, i.key, i);
-    }
-  }
-
-  function s(e, t, n) {
-    return t && r(e.prototype, t), n && r(e, n), e;
-  }
-
-  var a = function () {
-    function e(t) {
-      var r = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
-      !function (e, t) {
-        if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
-      }(this, e), this.settings = function (e) {
-        for (var t = 1; t < arguments.length; t++) {
-          var r = null != arguments[t] ? arguments[t] : {};
-          t % 2 ? n(r, !0).forEach(function (t) {
-            i(e, t, r[t]);
-          }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(r)) : n(r).forEach(function (t) {
-            Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(r, t));
-          });
-        }
-
-        return e;
-      }({}, this.options, {}, r), this._init(t);
-    }
-
-    return s(e, [{
-      key: "options",
-      get: function get() {
-        return {
-          resize: !0,
-          speed: 300,
-          theme: "slinky-theme-default",
-          title: !1
-        };
-      }
-    }]), s(e, [{
-      key: "_init",
-      value: function value(e) {
-        this.menu = jQuery(e), this.base = this.menu.children().first();
-        var t = this.menu,
-            n = this.settings;
-        t.addClass("slinky-menu").addClass(n.theme), this._transition(n.speed), jQuery("a + ul", t).prev().addClass("js-next");
-        jQuery(".nav-menu-header").remove();
-        var i = jQuery("<li>").addClass("nav-menu-header");
-        jQuery("li > ul", t).prepend(i);
-        var r = jQuery("<a>").prop("href", "#").addClass("js-back");
-        jQuery(".nav-menu-header", t).prepend(r), n.title && jQuery("li > ul", t).each(function (e, t) {
-          var n = jQuery(t).parent().find("a").first().text();
-
-          if (n) {
-            var i = jQuery("<span>").addClass("js-title").text(n);
-            jQuery("> .nav-menu-header", t).append(i);
-          }
-        }), this._addListeners(), this._jumpToInitial();
-      }
-    }, {
-      key: "_addListeners",
-      value: function value() {
-        var e = this,
-            t = this.menu,
-            n = this.settings;
-        jQuery("a", t).on("click", function (i) {
-          if (e._clicked + n.speed > Date.now()) return !1;
-          e._clicked = Date.now();
-          var r = jQuery(i.currentTarget);
-          (0 === r.attr("href").indexOf("#") || r.hasClass("js-next") || r.hasClass("js-back")) && i.preventDefault(), r.hasClass("js-next") ? (t.find(".active").removeClass("active"), r.next().show().addClass("active"), e._move(1), n.resize && e._resize(r.next())) : r.hasClass("js-back") && (e._move(-1, function () {
-            t.find(".active").removeClass("active"), r.parent().parent().hide().parentsUntil(t, "ul").first().addClass("active");
-          }), n.resize && e._resize(r.parent().parent().parentsUntil(t, "ul")));
-        });
-      }
-    }, {
-      key: "_jumpToInitial",
-      value: function value() {
-        var e = this.menu,
-            t = this.settings,
-            n = e.find(".active");
-        n.length > 0 && (n.removeClass("active"), this.jump(n, !1)), setTimeout(function () {
-          return e.height(e.outerHeight());
-        }, t.speed);
-      }
-    }, {
-      key: "_move",
-      value: function value() {
-        var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
-            t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : function () {};
-
-        if (0 !== e) {
-          var n = this.settings,
-              i = this.base,
-              r = Math.round(parseInt(i.get(0).style.left)) || 0;
-          i.css("left", "".concat(r - 100 * e, "%")), "function" == typeof t && setTimeout(t, n.speed);
-        }
-      }
-    }, {
-      key: "_resize",
-      value: function value(e) {
-        this.menu.height(e.outerHeight());
-      }
-    }, {
-      key: "_transition",
-      value: function value() {
-        var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 300,
-            t = this.menu,
-            n = this.base;
-        t.css("transition-duration", "".concat(e, "ms")), n.css("transition-duration", "".concat(e, "ms"));
-      }
-    }, {
-      key: "jump",
-      value: function value(e) {
-        var t = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1];
-
-        if (e) {
-          var n = this.menu,
-              i = this.settings,
-              r = jQuery(e),
-              s = n.find(".active"),
-              a = 0;
-          s.length > 0 && (a = s.parentsUntil(n, "ul").length), n.find("ul").removeClass("active").hide();
-          var o = r.parentsUntil(n, "ul");
-          o.show(), r.show().addClass("active"), t || this._transition(0), this._move(o.length - a), i.resize && this._resize(r), t || this._transition(i.speed);
-        }
-      }
-    }, {
-      key: "home",
-      value: function value() {
-        var e = !(arguments.length > 0 && void 0 !== arguments[0]) || arguments[0],
-            t = this.base,
-            n = this.menu,
-            i = this.settings;
-        e || this._transition(0);
-        var r = n.find(".active"),
-            s = r.parentsUntil(n, "ul");
-        this._move(-s.length, function () {
-          r.removeClass("active").hide(), s.not(t).hide();
-        }), i.resize && this._resize(t), !1 === e && this._transition(i.speed);
-      }
-    }, {
-      key: "destroy",
-      value: function value() {
-        var e = this,
-            t = this.base,
-            n = this.menu;
-        jQuery(".nav-menu-header", n).remove(), jQuery("a", n).removeClass("js-next").off("click"), n.css({
-          height: "",
-          "transition-duration": ""
-        }), t.css({
-          left: "",
-          "transition-duration": ""
-        }), n.find(".active").removeClass("active"), n.attr("class").split(" ").forEach(function (e) {
-          0 === e.indexOf("slinky") && n.removeClass(e);
-        });
-        ["settings", "menu", "base"].forEach(function (t) {
-          return delete e[t];
-        });
-      }
-    }]), e;
-  }();
-
-  jQuery.fn.slinky = function (e) {
-    return new a(this, e);
-  };
-}, function (e, t, n) {}]);
-$(function () {
-  // Tools Event
-  $('.nav-user').clone().prependTo('.head-mobile');
-  $('.nav-logo').clone().prependTo('.head-mobile');
-  $('.nav-close').clone().prependTo('.head-mobile');
-  $(document).on('click', '.js-search', function () {
-    $(this).toggleClass('is-active');
-    $('.nav-head').toggleClass('is-active');
-    $('.nav-search').toggleClass('is-active');
-  });
-  $(document).on('click', '.js-alert', function () {
-    $(this).toggleClass('is-active');
-  }); // Responsive Function
-
-  var slinky = $('.nav-wrap').slinky({
+/* WEBPACK VAR INJECTION */(function($) {$(function () {
+  // Nav Varibles
+  var win = $(window),
+      doc = $(document),
+      html = $(document.documentElement),
+      headMobile = $('.head-mobile'),
+      nav = $('.nav'),
+      navHead = $('.nav-head'),
+      navUser = $('.nav-user'),
+      navLogo = $('.nav-logo'),
+      navClose = $('.nav-close'),
+      navArrow = '<span class="nav-menu-arrow"><svg><use xlink:href="#arrow"></use></svg></span>',
+      navWrap = $('.nav-wrap'),
+      navMenu = $('.nav-menu'),
+      navSub = $('.nav-submenu'),
+      navSubActive = '.nav-submenu.is-active',
+      navItem = '.nav-menu-item',
+      navMore = $('.nav-menu-more'),
+      navSearch = $('.nav-search'),
+      slinky = navWrap.slinky({
     title: true
-  });
+  }),
+      toggleMenu = '.js-toggle-menu',
+      toggleNext = '.js-next',
+      togglePrev = '.js-prev',
+      toggleBack = '.js-back',
+      toggleSearch = '.js-search',
+      toggleAlert = '.js-alert',
+      bodyScrollLock = __webpack_require__(/*! body-scroll-lock */ "../../node_modules/body-scroll-lock/lib/bodyScrollLock.min.js"),
+      disableBodyScroll = bodyScrollLock.disableBodyScroll,
+      enableBodyScroll = bodyScrollLock.enableBodyScroll,
+      navTarget = document.querySelector('.nav-overflow'),
+      toolbar = $('.toolbar'); // Clone Event
+
+
+  navUser.clone().prependTo(headMobile);
+  navLogo.clone().prependTo(headMobile);
+  navClose.clone().prependTo(headMobile); //
+  // Toggle Event
+
+  doc.on('click', toggleMenu, function () {
+    slinky.home();
+    $(toggleMenu).toggleClass('is-active');
+
+    if ($(toggleMenu + '.is-active').length != 0) {
+      html.css('overflow', 'initial');
+      disableBodyScroll(navTarget);
+    } else {
+      html.css('overflow', '');
+      enableBodyScroll(navTarget);
+    }
+
+    headMobile.toggleClass('is-active');
+    nav.toggleClass('is-open');
+    navHead.removeClass('is-active');
+    navMenu.addClass('is-active');
+  }); //
+  // Mobile Event
 
   function inMobile() {
-    if (typeof slinky !== 'undefined') {
-      slinky.destroy();
-    }
-
-    slinky = $('.nav-wrap').slinky({
+    slinky.destroy();
+    slinky = navWrap.slinky({
       title: true
     });
     slinky.home();
-    $('.nav').removeClass('is-desktop');
-    $('.nav-head').removeClass('is-active');
-    $('.nav-menu').addClass('is-active');
-    $('.nav-menu-more').children('.nav-submenu').children('.nav-menu-item').addClass('nav-menu-clone').appendTo('.nav-menu');
-    $(document).on('click', '.js-toggle-menu', function () {
-      slinky.home();
-      $('.js-toggle-menu').toggleClass('is-active');
-      $('.head-mobile').toggleClass('is-active');
-      $('.nav').toggleClass('is-open');
-      $('.nav-head').removeClass('is-active');
-      $('.nav-menu').addClass('is-active');
+    navHead.removeClass('is-active');
+    navMenu.addClass('is-active');
+    $(navItem).removeClass('is-hover');
+    navMore.children('.nav-submenu').children('.nav-menu-item').addClass('nav-menu-clone').appendTo(navMenu);
+    doc.on('click', toggleNext, function () {
+      $(togglePrev).html(navArrow);
+      navSub.removeClass('is-active');
+      $(this).next('ul').addClass('is-active').children('.nav-menu-header').find('.js-title').clone().removeClass('js-title').appendTo(togglePrev);
+      navHead.toggleClass('is-active', $(navSubActive).length != 0);
+      navMenu.toggleClass('is-active', $(navSubActive).length === 0);
     });
-    $(document).on('click', '.js-next', function () {
-      $('.nav-head-back').html('<span class="nav-menu-arrow"><svg><use xlink:href="#arrow"></use></svg></span>');
-      $('.nav-submenu').removeClass('is-active');
-      $(this).next('ul').addClass('is-active').children('.nav-menu-header').find('.js-title').clone().removeClass('js-title').appendTo('.nav-head-back');
+    doc.on('click', togglePrev, function () {
+      $(togglePrev).html(navArrow);
+      navSub.removeClass('is-active');
+      $('.nav-submenu.active').parents('.nav-submenu').addClass('is-active').children('.nav-menu-header').find('.js-title').clone().removeClass('js-title').appendTo(togglePrev);
+      $('.nav-submenu.active').find(toggleBack).trigger('click');
+      navHead.toggleClass('is-active', $(navSubActive).length != 0);
+      navMenu.toggleClass('is-active', $(navSubActive).length === 0);
+    });
+    toolbar.addClass('is-animate');
+  } //
+  // Desktop Event
 
-      if ($('.nav-submenu').hasClass('is-active')) {
-        $('.nav-head').addClass('is-active');
-        $('.nav-menu').removeClass('is-active');
-      } else {
-        $('.nav-head').removeClass('is-active');
-        $('.nav-menu').addClass('is-active');
-      }
-    });
-    $(document).on('click', '.js-prev', function () {
-      $('.nav-head-back').html('<span class="nav-menu-arrow"><svg><use xlink:href="#arrow"></use></svg></span>');
-      $('.nav-submenu').removeClass('is-active');
-      $('.nav-submenu.active').parents('.nav-submenu').addClass('is-active').children('.nav-menu-header').find('.js-title').clone().removeClass('js-title').appendTo('.nav-head-back');
-      $('.nav-submenu.active').find('.js-back').trigger('click');
-
-      if ($('.nav-submenu').hasClass('is-active')) {
-        $('.nav-head').addClass('is-active');
-        $('.nav-menu').removeClass('is-active');
-      } else {
-        $('.nav-head').removeClass('is-active');
-        $('.nav-menu').addClass('is-active');
-      }
-    });
-  }
 
   function inDesktop() {
-    if (typeof slinky !== 'undefined') {
-      slinky.destroy();
-    }
-
-    $('.nav').addClass('is-desktop');
-    $('.nav-submenu').removeAttr('style');
-    $('.nav-menu-clone').removeClass('nav-menu-clone').appendTo('.nav-menu-more .nav-submenu');
-    $(document).on('mouseover', '.is-desktop .nav-menu-item', function () {
-      if ($(this).children('.nav-submenu').length) {
-        $('.is-desktop .nav-head').addClass('is-active');
-      } else {
-        $('.is-desktop .nav-head').removeClass('is-active');
-      }
-
-      $('.is-desktop .nav-search').addClass('is-hidden');
-      $(this).siblings('.nav-menu-item').removeClass('is-hover');
-      $(this).addClass('is-hover');
+    slinky.destroy();
+    navHead.removeClass('is-active');
+    navMenu.addClass('is-active');
+    navSub.removeAttr('style');
+    $('.nav-menu-clone').removeClass('nav-menu-clone').appendTo(navMore.children('.nav-submenu'));
+    doc.on('mouseover mouseout', navItem, function () {
+      if (win.outerWidth() <= 1099) return;
+      navHead.toggleClass('is-active', $(this).children('.nav-submenu').length != 0);
+      navSearch.addClass('is-hidden');
+      $(this).siblings(navItem).removeClass('is-hover');
+      $(this).toggleClass('is-hover');
     });
-    $(document).on('mouseout', '.is-desktop .nav-menu-item', function () {
-      if ($('.is-desktop .js-search').hasClass('is-active')) {
-        $('.is-desktop .nav-head').addClass('is-active');
-      } else {
-        $('.is-desktop .nav-head').removeClass('is-active');
-      }
-
-      $('.is-desktop .nav-search').removeClass('is-hidden');
-      $(this).removeClass('is-hover');
+    doc.on('mouseout', navItem, function () {
+      if (win.outerWidth() <= 1099) return;
+      navHead.toggleClass('is-active', $('.js-search.is-active').length != 0);
+      navSearch.removeClass('is-hidden');
     });
-    $(document).bind('mouseup touchend', function (e) {
-      if ($(e.target).closest('.js-search').length || $(e.target).closest('.nav-menu').length || $(e.target).closest('.nav-search').length) return;
-      $('.js-search').removeClass('is-active');
-      $('.is-desktop .nav-head').removeClass('is-active');
-      $('.is-desktop .nav-search').removeClass('is-active');
+    doc.on('mouseup touchend', function (e) {
+      if (win.outerWidth() <= 1099) return;
+      if ($(e.target).closest(toggleSearch).length || $(e.target).closest(navMenu).length || $(e.target).closest(navSearch).length) return;
+      $(toggleSearch).removeClass('is-active');
+      navHead.removeClass('is-active');
+      navSearch.removeClass('is-active');
     });
+    doc.on('click', toggleSearch, function () {
+      $(this).toggleClass('is-active');
+      navHead.toggleClass('is-active');
+      navSearch.toggleClass('is-active');
+    });
+    doc.on('click', toggleAlert, function () {
+      $(this).toggleClass('is-active');
+    });
+    toolbar.removeClass('is-animate');
   } //
   // Resize Event
 
 
-  if ($(window).outerWidth() <= 1099) {
+  if (win.outerWidth() <= 1099) {
     inMobile();
   } else {
     inDesktop();
   }
 
-  setTimeout(function () {
-    if ($(window).outerWidth() <= 1099) {
-      $('.toolbar').addClass('is-animate');
-    } else {
-      $('.toolbar').removeClass('is-animate');
-    }
-  }, 500);
-  var width = $(window).outerWidth();
-  $(window).resize(function () {
-    if ($(this).outerWidth() != width) {
-      width = $(this).outerWidth();
+  var winWidth = win.outerWidth();
+  win.resize(function () {
+    if ($(this).outerWidth() != winWidth) {
+      winWidth = $(this).outerWidth();
 
-      if ($(window).outerWidth() <= 1099) {
-        slinky = $('.nav-wrap').slinky({
-          title: true
-        });
+      if (winWidth <= 1099) {
         inMobile();
-        $('.toolbar').addClass('is-animate');
       } else {
         inDesktop();
-        $('.toolbar').removeClass('is-animate');
+      }
+    }
+  }); //
+});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
+/***/ "../blocks/overview-bk/script.js":
+/*!***************************************!*\
+  !*** ../blocks/overview-bk/script.js ***!
+  \***************************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var swiper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swiper */ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js");
+
+$(function () {
+  var doc = $(document),
+      toggleAcc = $('.js-overview-bk-acc'),
+      blockAcc = $('.js-overview-bk-body');
+  if (toggleAcc.length === 0 || blockAcc.length === 0) return;
+  toggleAcc.on('click', function () {
+    $(this).toggleClass('is-close');
+    $(this).parent().find(blockAcc).slideToggle(300);
+  });
+  var toggleMore = '.js-overview-bk-more',
+      toggleHide = $('.js-overview-bk-hide'),
+      blockFull = $('.js-overview-bk-full');
+  doc.on('click', toggleMore, function () {
+    var $this = $(this);
+    $this.toggleClass('is-full');
+    setTimeout(function () {
+      $this.parent().toggleClass('is-full');
+    }, 300);
+    $this.parent().find(blockFull).slideToggle(300);
+  });
+  toggleHide.on('click', function () {
+    $(this).parents('.is-full').find(blockFull).slideToggle(300);
+    $(this).parents('.is-full').find(toggleMore).toggleClass('is-full');
+    $(this).parents('.is-full').toggleClass('is-full');
+  });
+});
+$(function () {
+  var win = $(window),
+      overviewBkFeature = $('.overview-bk-feature'),
+      overviewBkMain = $('.overview-bk-main'),
+      anchorFix = $('.overview-bk-tab.js-overview-bk-fix'),
+      anchorTab = $('.js-overview-bk-anchor'),
+      panelShow = $('.js-overview-bk-panel');
+
+  function scrollAnchor() {
+    var limitPanel = win.scrollTop() >= overviewBkFeature.offset().top,
+        limitAnchorMob = win.scrollTop() >= anchorFix.offset().top,
+        limitAnchorWeb = win.scrollTop() >= anchorFix.offset().top - 15;
+
+    if (win.outerWidth() <= 1099) {
+      anchorFix.find('.overview-bk-tabHead').toggleClass('is-fix', limitAnchorMob);
+    } else {
+      anchorFix.find('.overview-bk-tabHead').toggleClass('is-fix', limitAnchorWeb);
+    }
+
+    panelShow.toggleClass('is-active', limitPanel);
+    anchorTab.each(function (i) {
+      var anchorTag = $(this).attr('href'),
+          anchorPos = $('div' + anchorTag);
+
+      if (win.outerWidth() <= 1099) {
+        if (win.scrollTop() >= anchorPos.offset().top - 135) {
+          if (i === 0 || i === 1) {
+            anchorTab.removeClass('is-select');
+            anchorTab.eq(1).addClass('is-select');
+          } else {
+            anchorTab.removeClass('is-select');
+            anchorTab.eq(i).addClass('is-select');
+          }
+        }
+      } else {
+        if (win.scrollTop() >= anchorPos.offset().top - 201) {
+          if (i === 0 || i === 1) {
+            anchorTab.removeClass('is-select');
+            anchorTab.eq(1).addClass('is-select');
+          } else {
+            anchorTab.removeClass('is-select');
+            anchorTab.eq(i).addClass('is-select');
+          }
+        }
+      }
+    });
+  }
+
+  function stopScript() {
+    if (overviewBkMain.length != 0) {
+      scrollAnchor();
+    } else {
+      return;
+    }
+  }
+
+  win.on('scroll', function () {
+    stopScript();
+  });
+  stopScript();
+  if (overviewBkMain.length === 0) return;
+  anchorTab.on('click', function () {
+    var html = $(document.body).add(document.documentElement),
+        anchorTag = $(this).attr('href'),
+        anchorPos = $('div' + anchorTag);
+
+    if (win.outerWidth() <= 1099) {
+      html.animate({
+        scrollTop: anchorPos.offset().top - 55
+      }, 500);
+    } else {
+      html.animate({
+        scrollTop: anchorPos.offset().top - 101
+      }, 500);
+    }
+
+    return false;
+  });
+  var range = $('.overview-bk-review-range input'),
+      addReview = $('.reviews-add');
+  range.on('input', function (e) {
+    var rangeValue = e.target.value;
+
+    if (rangeValue > 4 && rangeValue < 8) {
+      range.parent().removeClass('is-success is-danger');
+    } else if (rangeValue <= 4) {
+      range.parent().removeClass('is-success');
+      range.parent().addClass('is-danger');
+    } else if (rangeValue >= 8) {
+      range.parent().removeClass('is-danger');
+      range.parent().addClass('is-success');
+    }
+  });
+
+  function getFormData($form) {
+    var unindexed_array = $form.serializeArray();
+    var indexed_array = {};
+    $.map(unindexed_array, function (n, i) {
+      indexed_array[n['name']] = n['value'];
+    });
+    return indexed_array;
+  }
+
+  addReview.on('submit', function (t) {
+    t.preventDefault();
+    var count = !0,
+        valueRequired = $(this).find('.required');
+
+    if ($(valueRequired).each(function () {
+      $(this).val() ? $(this).removeClass('empty-field') : ($(this).addClass('empty-field'), count = !1);
+    }), 1 == count) {
+      var form = getFormData($(this));
+      addReview.find('.text-danger').empty();
+      $.post('/include/ajax/add-review.handler.php', {
+        form: form
+      }, function (result) {
+        result = JSON.parse(result);
+
+        if (result['success']) {
+          addReview[0].reset();
+          $('#success').fadeIn().addClass('is-open');
+        }
+      });
+    }
+  });
+  var ratingApp = $('.js-app-rating'),
+      ratingCount = ratingApp.data('rating'),
+      ratingPercent = parseFloat(ratingCount) * 100 / 5;
+  ratingApp.find('.overview-bk-app-rating-mask').css('width', ratingPercent + '%');
+  var assessmentSlider = $('.js-assessment-slider');
+  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](assessmentSlider.get(0), {
+    slidesPerView: 'auto',
+    freeMode: true,
+    navigation: {
+      nextEl: assessmentSlider.siblings('.swiper-button-next'),
+      prevEl: assessmentSlider.siblings('.swiper-button-prev')
+    },
+    breakpointsInverse: true,
+    breakpoints: {
+      992: {
+        slidesPerView: 3,
+        spaceBetween: 16,
+        freeMode: false
       }
     }
   });
+  var faqInput = $('.js-faq-input'),
+      faqNothing = $('.js-faq-nothing'),
+      faqList = $('.js-faq-list').parent(),
+      faqItem = $('.js-faq-item'),
+      toggleMore = '.js-overview-bk-more',
+      blockFull = '.js-overview-bk-full';
+  faqInput.on('keyup', function () {
+    var input = $(this),
+        value = input.val();
+
+    if (value) {
+      var reg = new RegExp(value, 'i');
+      faqList.find(blockFull).show();
+      faqList.find(toggleMore).hide();
+      faqItem.each(function () {
+        var $this = $(this);
+
+        if ($this.text().match(reg)) {
+          $this.show();
+        } else {
+          $this.hide();
+        }
+      });
+      var faqItemVisible = $('.js-faq-item:visible');
+
+      if (faqItemVisible.length === 0) {
+        faqNothing.show();
+      } else {
+        faqNothing.hide();
+      }
+    } else {
+      faqNothing.hide();
+      faqItem.show();
+      faqList.find(blockFull).hide();
+      faqList.find(toggleMore).show();
+    }
+  });
+  var progress = $('.js-overview-bk-path');
+  progress.each(function (path) {
+    var length = progress[path].getTotalLength(),
+        value = $(progress[path].parentNode).data('progress'),
+        to = length * ((100 - value) / 100);
+
+    if (value < 50) {
+      $(progress[path].parentNode).addClass('is-danger');
+    } else if (value < 75) {
+      $(progress[path].parentNode).addClass('is-average');
+    } else {
+      $(progress[path].parentNode).addClass('is-success');
+    }
+
+    progress[path].getBoundingClientRect();
+    progress[path].style.strokeDashoffset = Math.max(0, to);
+  });
+  $('.js-tab').each(function () {
+    var $tab = $(this),
+        assessmentTab = $tab.find('.overview-bk-assessment-tabHead'),
+        paymentTab = $tab.find('.overview-bk-payment-tabHead');
+
+    if (assessmentTab.length != 0) {
+      new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](assessmentTab.find('.swiper-container'), {
+        slidesPerView: 3,
+        spaceBetween: 15,
+        resistanceRatio: 0,
+        navigation: {
+          nextEl: assessmentTab.find('.swiper-button-next'),
+          prevEl: assessmentTab.find('.swiper-button-prev')
+        },
+        on: {
+          init: function init() {
+            if (assessmentTab.find('.swiper-button-next.swiper-button-disabled').length != 0 && assessmentTab.find('.swiper-button-prev.swiper-button-disabled').length != 0) {
+              assessmentTab.addClass('is-start');
+            }
+          },
+          slideChange: function slideChange() {
+            if (assessmentTab.find('.swiper-button-next.swiper-button-disabled').length != 0) {
+              assessmentTab.removeClass('is-move');
+              assessmentTab.addClass('is-end');
+            } else if (assessmentTab.find('.swiper-button-prev.swiper-button-disabled').length != 0) {
+              assessmentTab.removeClass('is-end is-move');
+            } else {
+              assessmentTab.removeClass('is-end');
+              assessmentTab.addClass('is-move');
+            }
+          }
+        }
+      });
+    }
+
+    if (paymentTab.length != 0) {
+      new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](paymentTab.find('.swiper-container'), {
+        slidesPerView: 7,
+        spaceBetween: 15,
+        resistanceRatio: 0,
+        navigation: {
+          nextEl: paymentTab.find('.swiper-button-next'),
+          prevEl: paymentTab.find('.swiper-button-prev')
+        },
+        on: {
+          init: function init() {
+            setTimeout(function () {
+              if (paymentTab.find('.swiper-button-next.swiper-button-disabled').length != 0 && paymentTab.find('.swiper-button-prev.swiper-button-disabled').length != 0) {
+                paymentTab.addClass('is-start');
+              }
+            }, 300);
+          },
+          slideChange: function slideChange() {
+            if (paymentTab.find('.swiper-button-next.swiper-button-disabled').length != 0) {
+              paymentTab.removeClass('is-move');
+              paymentTab.addClass('is-end');
+            } else if (paymentTab.find('.swiper-button-prev.swiper-button-disabled').length != 0) {
+              paymentTab.removeClass('is-end is-move');
+            } else {
+              paymentTab.removeClass('is-end');
+              paymentTab.addClass('is-move');
+            }
+          }
+        }
+      });
+    }
+
+    $tab.find('.js-tabItem').on('click', function () {
+      var $tabItem = $(this);
+      $tab.find('.js-tabItem').removeClass('is-select');
+      $tabItem.addClass('is-select');
+      var clickedTab = $tabItem,
+          clickedTabIndex = clickedTab.index();
+      $tab.find('.js-tabBlock.is-open').hide();
+      $tab.find('.js-tabBlock').removeClass('is-open');
+      $tab.find('.js-tabBlock').eq(clickedTabIndex).show().addClass('is-open');
+    });
+  });
+  var overviewBkNews = '.js-overview-bk-news';
+  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](overviewBkNews, {
+    slidesPerView: 'auto',
+    freeMode: true
+  });
 });
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js"), __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -20274,7 +20155,7 @@ $(function () {
           html = $(html);
           var newPagination = html.is('.js-pagination') ? html.filter('.js-pagination') : html.find('.js-pagination'),
               items = html.find('.js-load-more-item'),
-              row = $('.js-load-more-container');
+              row = pagination.parent().find('.js-load-more-container').length != 0 ? pagination.parent().find('.js-load-more-container') : $('.js-load-more-container');
           pagination.empty().append(newPagination.children());
           row.append(items);
           if (params.setPageUrl) history.pushState({}, document.title, url);
@@ -20511,7 +20392,7 @@ $(function () {
     $('.workarea').addClass('workarea-has-runet-block');
   }
 
-  if ($(window).width() > 990 && parseInt($('.workarea').height()) < 1360) {
+  if ($(window).width() > 1099 && parseInt($('.workarea').height()) < 1360) {
     runetBlock.addClass('hold');
     runetBlock.fadeIn(0);
   } else {
@@ -20526,7 +20407,7 @@ $(function () {
   if (mainTopBookmakers.length > 0) minStartEvent = mainTopBookmakers.height() / 2;
   $(window).scroll(function () {
     var currentWidth = parseInt($('header').css('width')),
-        workWidth = 990; // От какой ширины страницы будет работать скрипт
+        workWidth = 1099; // От какой ширины страницы будет работать скрипт
 
     if (currentWidth <= workWidth) {
       var scrollCurrent = $(window).scrollTop();
@@ -20577,7 +20458,7 @@ $(function () {
   function initResizeJS() {
     var hasRunetBlock = runetBlock.length > 0;
 
-    if ($(window).width() < 990 && hasRunetBlock) {
+    if ($(window).width() < 1099 && hasRunetBlock) {
       initRuNetMobileSlider();
     } else if (hasRunetBlock) {
       removeRuNetMobileSlider();
@@ -20608,6 +20489,342 @@ $(function () {
 
 /***/ }),
 
+/***/ "../blocks/sentiment/script.js":
+/*!*************************************!*\
+  !*** ../blocks/sentiment/script.js ***!
+  \*************************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var swiper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swiper */ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js");
+
+$(function () {
+  var sentiment = document.getElementById('js-sentiment');
+  if (!sentiment) return;
+  var sentimentSliderNav = $('.js-review-slideNav'),
+      sentimentSliderFor = $('.js-review-slideFor');
+  var sentimentObs = new IntersectionObserver(function (entries, observer) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        var sentimentThis = entry.target,
+            bound = sentimentThis.getBoundingClientRect();
+
+        if (bound.top <= window.innerHeight && bound.bottom >= 0) {
+          Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(1)]).then(__webpack_require__.bind(null, /*! ./sentiment.js */ "../blocks/sentiment/sentiment.js")).then(function (module) {
+            module.init();
+          });
+          sentimentObs.unobserve(sentimentThis);
+        }
+      }
+    });
+  });
+  sentimentObs.observe(sentiment);
+  if (sentimentSliderNav.length <= 0 || sentimentSliderFor.length <= 0) return;
+  var sliderNav = new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](sentimentSliderNav.get(0), {
+    slidesPerView: 'auto',
+    freeMode: true,
+    watchSlidesVisibility: true,
+    watchSlidesProgress: true,
+    breakpointsInverse: true,
+    breakpoints: {
+      1100: {
+        slidesPerView: 2,
+        spaceBetween: 16,
+        freeMode: false,
+        navigation: {
+          nextEl: sentimentSliderNav.siblings('.swiper-button-next'),
+          prevEl: sentimentSliderNav.siblings('.swiper-button-prev')
+        }
+      }
+    },
+    on: {
+      init: function init() {
+        if (sentimentSliderNav.siblings('.swiper-button-next.swiper-button-disabled').length > 0 && sentimentSliderNav.siblings('.swiper-button-prev.swiper-button-disabled').length > 0) {
+          sentimentSliderNav.parent().addClass('is-start');
+        }
+      },
+      slideChange: function slideChange() {
+        if (sentimentSliderNav.siblings('.swiper-button-next.swiper-button-disabled').length > 0) {
+          sentimentSliderNav.parent().removeClass('is-move');
+          sentimentSliderNav.parent().addClass('is-end');
+        } else if (sentimentSliderNav.siblings('.swiper-button-prev.swiper-button-disabled').length > 0) {
+          sentimentSliderNav.parent().removeClass('is-end is-move');
+        } else {
+          sentimentSliderNav.parent().removeClass('is-end');
+          sentimentSliderNav.parent().addClass('is-move');
+        }
+      }
+    }
+  });
+  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](sentimentSliderFor.get(0), {
+    spaceBetween: 15,
+    navigation: {
+      nextEl: sentimentSliderFor.siblings('.swiper-button-next'),
+      prevEl: sentimentSliderFor.siblings('.swiper-button-prev')
+    },
+    thumbs: {
+      swiper: sliderNav
+    }
+  });
+});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
+/***/ "./libs/slinky.min.js":
+/*!****************************!*\
+  !*** ./libs/slinky.min.js ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(jQuery) {function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+/*
+    * Slinky
+    * Rather sweet menus
+    * @author Ali Zahid <ali.zahid@live.com>
+    * @license MIT
+*/
+!function (e) {
+  var t = {};
+
+  function n(i) {
+    if (t[i]) return t[i].exports;
+    var r = t[i] = {
+      i: i,
+      l: !1,
+      exports: {}
+    };
+    return e[i].call(r.exports, r, r.exports, n), r.l = !0, r.exports;
+  }
+
+  n.m = e, n.c = t, n.d = function (e, t, i) {
+    n.o(e, t) || Object.defineProperty(e, t, {
+      enumerable: !0,
+      get: i
+    });
+  }, n.r = function (e) {
+    "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(e, Symbol.toStringTag, {
+      value: "Module"
+    }), Object.defineProperty(e, "__esModule", {
+      value: !0
+    });
+  }, n.t = function (e, t) {
+    if (1 & t && (e = n(e)), 8 & t) return e;
+    if (4 & t && "object" == _typeof(e) && e && e.__esModule) return e;
+    var i = Object.create(null);
+    if (n.r(i), Object.defineProperty(i, "default", {
+      enumerable: !0,
+      value: e
+    }), 2 & t && "string" != typeof e) for (var r in e) {
+      n.d(i, r, function (t) {
+        return e[t];
+      }.bind(null, r));
+    }
+    return i;
+  }, n.n = function (e) {
+    var t = e && e.__esModule ? function () {
+      return e.default;
+    } : function () {
+      return e;
+    };
+    return n.d(t, "a", t), t;
+  }, n.o = function (e, t) {
+    return Object.prototype.hasOwnProperty.call(e, t);
+  }, n.p = "", n(n.s = 0);
+}([function (e, t, n) {
+  n(1), e.exports = n(2);
+}, function (e, t) {
+  function n(e, t) {
+    var n = Object.keys(e);
+    return Object.getOwnPropertySymbols && n.push.apply(n, Object.getOwnPropertySymbols(e)), t && (n = n.filter(function (t) {
+      return Object.getOwnPropertyDescriptor(e, t).enumerable;
+    })), n;
+  }
+
+  function i(e, t, n) {
+    return t in e ? Object.defineProperty(e, t, {
+      value: n,
+      enumerable: !0,
+      configurable: !0,
+      writable: !0
+    }) : e[t] = n, e;
+  }
+
+  function r(e, t) {
+    for (var n = 0; n < t.length; n++) {
+      var i = t[n];
+      i.enumerable = i.enumerable || !1, i.configurable = !0, "value" in i && (i.writable = !0), Object.defineProperty(e, i.key, i);
+    }
+  }
+
+  function s(e, t, n) {
+    return t && r(e.prototype, t), n && r(e, n), e;
+  }
+
+  var a = function () {
+    function e(t) {
+      var r = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
+      !function (e, t) {
+        if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
+      }(this, e), this.settings = function (e) {
+        for (var t = 1; t < arguments.length; t++) {
+          var r = null != arguments[t] ? arguments[t] : {};
+          t % 2 ? n(r, !0).forEach(function (t) {
+            i(e, t, r[t]);
+          }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(r)) : n(r).forEach(function (t) {
+            Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(r, t));
+          });
+        }
+
+        return e;
+      }({}, this.options, {}, r), this._init(t);
+    }
+
+    return s(e, [{
+      key: "options",
+      get: function get() {
+        return {
+          resize: !0,
+          speed: 300,
+          theme: "slinky-theme-default",
+          title: !1
+        };
+      }
+    }]), s(e, [{
+      key: "_init",
+      value: function value(e) {
+        this.menu = jQuery(e), this.base = this.menu.children().first();
+        var t = this.menu,
+            n = this.settings;
+        t.addClass("slinky-menu").addClass(n.theme), this._transition(n.speed), jQuery("a + ul", t).prev().addClass("js-next");
+        jQuery(".nav-menu-header").remove();
+        var i = jQuery("<li>").addClass("nav-menu-header");
+        jQuery("li > ul", t).prepend(i);
+        var r = jQuery("<a>").prop("href", "#").addClass("js-back");
+        jQuery(".nav-menu-header", t).prepend(r), n.title && jQuery("li > ul", t).each(function (e, t) {
+          var n = jQuery(t).parent().find("a").first().text();
+
+          if (n) {
+            var i = jQuery("<span>").addClass("js-title").text(n);
+            jQuery("> .nav-menu-header", t).append(i);
+          }
+        }), this._addListeners(), this._jumpToInitial();
+      }
+    }, {
+      key: "_addListeners",
+      value: function value() {
+        var e = this,
+            t = this.menu,
+            n = this.settings;
+        jQuery("a", t).on("click", function (i) {
+          if (e._clicked + n.speed > Date.now()) return !1;
+          e._clicked = Date.now();
+          var r = jQuery(i.currentTarget);
+          (0 === r.attr("href").indexOf("#") || r.hasClass("js-next") || r.hasClass("js-back")) && i.preventDefault(), r.hasClass("js-next") ? (t.find(".active").removeClass("active"), r.next().show().addClass("active"), e._move(1), n.resize && e._resize(r.next())) : r.hasClass("js-back") && (e._move(-1, function () {
+            t.find(".active").removeClass("active"), r.parent().parent().hide().parentsUntil(t, "ul").first().addClass("active");
+          }), n.resize && e._resize(r.parent().parent().parentsUntil(t, "ul")));
+        });
+      }
+    }, {
+      key: "_jumpToInitial",
+      value: function value() {
+        var e = this.menu,
+            t = this.settings,
+            n = e.find(".active");
+        n.length > 0 && (n.removeClass("active"), this.jump(n, !1)), setTimeout(function () {
+          return e.height(e.outerHeight());
+        }, t.speed);
+      }
+    }, {
+      key: "_move",
+      value: function value() {
+        var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
+            t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : function () {};
+
+        if (0 !== e) {
+          var n = this.settings,
+              i = this.base,
+              r = Math.round(parseInt(i.get(0).style.left)) || 0;
+          i.css("left", "".concat(r - 100 * e, "%")), "function" == typeof t && setTimeout(t, n.speed);
+        }
+      }
+    }, {
+      key: "_resize",
+      value: function value(e) {
+        this.menu.height(e.outerHeight());
+      }
+    }, {
+      key: "_transition",
+      value: function value() {
+        var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 300,
+            t = this.menu,
+            n = this.base;
+        t.css("transition-duration", "".concat(e, "ms")), n.css("transition-duration", "".concat(e, "ms"));
+      }
+    }, {
+      key: "jump",
+      value: function value(e) {
+        var t = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1];
+
+        if (e) {
+          var n = this.menu,
+              i = this.settings,
+              r = jQuery(e),
+              s = n.find(".active"),
+              a = 0;
+          s.length > 0 && (a = s.parentsUntil(n, "ul").length), n.find("ul").removeClass("active").hide();
+          var o = r.parentsUntil(n, "ul");
+          o.show(), r.show().addClass("active"), t || this._transition(0), this._move(o.length - a), i.resize && this._resize(r), t || this._transition(i.speed);
+        }
+      }
+    }, {
+      key: "home",
+      value: function value() {
+        var e = !(arguments.length > 0 && void 0 !== arguments[0]) || arguments[0],
+            t = this.base,
+            n = this.menu,
+            i = this.settings;
+        e || this._transition(0);
+        var r = n.find(".active"),
+            s = r.parentsUntil(n, "ul");
+        this._move(-s.length, function () {
+          r.removeClass("active").hide(), s.not(t).hide();
+        }), i.resize && this._resize(t), !1 === e && this._transition(i.speed);
+      }
+    }, {
+      key: "destroy",
+      value: function value() {
+        var e = this,
+            t = this.base,
+            n = this.menu;
+        jQuery(".nav-menu-header", n).remove(), jQuery("a", n).removeClass("js-next").off("click"), n && n.css({
+          height: "",
+          "transition-duration": ""
+        }), t && t.css({
+          left: "",
+          "transition-duration": ""
+        }), n && n.find(".active").removeClass("active"), n && n.attr("class").split(" ").forEach(function (e) {
+          0 === e.indexOf("slinky") && n.removeClass(e);
+        });
+        ["settings", "menu", "base"].forEach(function (t) {
+          return delete e[t];
+        });
+      }
+    }]), e;
+  }();
+
+  jQuery.fn.slinky = function (e) {
+    return new a(this, e);
+  };
+}, function (e, t, n) {}]);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
 /***/ "./main.js":
 /*!*****************!*\
   !*** ./main.js ***!
@@ -20621,27 +20838,26 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! js-cookie */ "../../node_modules/js-cookie/src/js.cookie.js");
 /* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _old__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./old */ "./old.js");
+/* harmony import */ var _libs_slinky_min__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./libs/slinky.min */ "./libs/slinky.min.js");
+/* harmony import */ var _libs_slinky_min__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_libs_slinky_min__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _blocks_header_script__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../blocks/header/script */ "../blocks/header/script.js");
 /* harmony import */ var _blocks_header_script__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_blocks_header_script__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _blocks_nav_script__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../blocks/nav/script */ "../blocks/nav/script.js");
 /* harmony import */ var _blocks_nav_script__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_blocks_nav_script__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _blocks_runet_script__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../blocks/runet/script */ "../blocks/runet/script.js");
-/* harmony import */ var _blocks_feed_bar_script__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../blocks/feed-bar/script */ "../blocks/feed-bar/script.js");
-/* harmony import */ var _blocks_footer_script__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../blocks/footer/script */ "../blocks/footer/script.js");
-/* harmony import */ var _blocks_block_sports_script__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../blocks/block-sports/script */ "../blocks/block-sports/script.js");
-/* harmony import */ var _blocks_block_sports_script__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_blocks_block_sports_script__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _blocks_footer_script__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../blocks/footer/script */ "../blocks/footer/script.js");
+/* harmony import */ var _blocks_rating_bk_script__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../blocks/rating-bk/script */ "../blocks/rating-bk/script.js");
+/* harmony import */ var _blocks_bk_search_script__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../blocks/bk-search/script */ "../blocks/bk-search/script.js");
+/* harmony import */ var _blocks_bk_search_script__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_blocks_bk_search_script__WEBPACK_IMPORTED_MODULE_8__);
 /* harmony import */ var _blocks_pagination_script__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../blocks/pagination/script */ "../blocks/pagination/script.js");
 /* harmony import */ var _blocks_pagination_script__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(_blocks_pagination_script__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var _blocks_catfish_script__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../blocks/catfish/script */ "../blocks/catfish/script.js");
-/* harmony import */ var _blocks_catfish_script__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_blocks_catfish_script__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var _blocks_rating_bk_script__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../blocks/rating-bk/script */ "../blocks/rating-bk/script.js");
-/* harmony import */ var _blocks_banner_script__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../blocks/banner/script */ "../blocks/banner/script.js");
-/* harmony import */ var _sprite__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./sprite */ "./sprite.js");
-/* harmony import */ var _sprite__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(_sprite__WEBPACK_IMPORTED_MODULE_13__);
-/* harmony import */ var _blocks_forecast_script__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../blocks/forecast/script */ "../blocks/forecast/script.js");
-/* harmony import */ var _blocks_reward_script__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../blocks/reward/script */ "../blocks/reward/script.js");
-/* harmony import */ var _blocks_feed_script__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../blocks/feed/script */ "../blocks/feed/script.js");
+/* harmony import */ var _blocks_modal_script__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../blocks/modal/script */ "../blocks/modal/script.js");
+/* harmony import */ var _blocks_modal_script__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_blocks_modal_script__WEBPACK_IMPORTED_MODULE_10__);
+/* harmony import */ var _sprite__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./sprite */ "./sprite.js");
+/* harmony import */ var _sprite__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(_sprite__WEBPACK_IMPORTED_MODULE_11__);
+/* harmony import */ var _blocks_reward_script__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../blocks/reward/script */ "../blocks/reward/script.js");
+/* harmony import */ var _blocks_overview_bk_script__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../blocks/overview-bk/script */ "../blocks/overview-bk/script.js");
+/* harmony import */ var _blocks_sentiment_script__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../blocks/sentiment/script */ "../blocks/sentiment/script.js");
 
 
 
@@ -20650,12 +20866,8 @@ window.$ = jquery__WEBPACK_IMPORTED_MODULE_0___default.a;
 /** LIBS */
 
 
-/** OLD */
-
 
 /** CORE */
-
-
 
 
 
@@ -20670,824 +20882,7 @@ window.$ = jquery__WEBPACK_IMPORTED_MODULE_0___default.a;
 
 
 
-
-
-/** Пока не используемые скрпиты */
-//import '../blocks/match/script'
-//import '../blocks/widget/script'
-//import '../blocks/review-publish/script'
-//import '../blocks/sentiment/script'
-
-/***/ }),
-
-/***/ "./old.js":
-/*!****************!*\
-  !*** ./old.js ***!
-  \****************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var swiper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swiper */ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js");
-
-var scriptFunctions = {
-  scrollToElem: function scrollToElem(t) {
-    // Slowly scrolls to elemnt
-    $("html, body").animate({
-      scrollTop: $(t).offset().top - 20
-    }, 800);
-  },
-  timeoutFunc: function timeoutFunc(t, e, i) {
-    // Timout for showAnswer function
-    setTimeout(t, e, i);
-  },
-  hideEmptyClass: function hideEmptyClass() {
-    // Delete empty-class from page
-    $(document).on("focus", ".empty-field", function () {
-      $(this).removeClass("empty-field");
-    });
-  },
-  showSuccessMess: function showSuccessMess(t) {
-    // Show success message when user send reviews
-    $('.js-modal-success').fadeIn().addClass('is-open').load(t);
-  },
-  closeSuccessMess: function closeSuccessMess() {
-    $('.js-modal-success').fadeOut().removeClass('is-open');
-  },
-  addReview: function addReview() {
-    // Add review
-    $(".reviews-add").on("submit", function (t) {
-      t.preventDefault();
-      var e = !0,
-          i = $(this).find(".required");
-
-      if ($(i).each(function () {
-        $(this).val() ? $(this).removeClass("empty-field") : ($(this).addClass("empty-field"), e = !1);
-      }), 1 == e) {
-        $(".reviews-add .text-danger").empty();
-        var s = $(this).serialize();
-        $.ajax({
-          type: "POST",
-          data: s,
-          url: "/include/ajax/add-review.handler.php",
-          success: function success(t) {
-            $(".reviews-add")[0].reset();
-          },
-          error: function error(t) {
-            alert("Произошла ошибка. Обратитесь к администратору");
-          }
-        }).done(function () {
-          scriptFunctions.showSuccessMess("/include/ajax/review-success.php");
-        });
-      } else $(".reviews-add .text-danger").text("Заполните обязательные поля");
-    });
-  },
-  addCommit: function addCommit() {
-    // Если вводиле комментарий, получаем его
-    var commentTextIn = scriptFunctions.getCookie('commentText');
-
-    if (commentTextIn) {
-      $('.form-panel-control').text(commentTextIn);
-    }
-
-    $('.comments-detail-form textarea').val($('.form-panel-control').text());
-    $('.form-panel-control').on('click', function () {
-      if (parseInt($('.workarea').css('width')) < 900) {
-        $('header').css('opacity', '0');
-        $('.runet-block').css('opacity', '0');
-      }
-    });
-    $('.agree_personal_check').click(function () {
-      $('.soc_list').toggleClass("soc_list_close");
-      $('.bx-auth').toggleClass("bx-auth_close");
-    }); // Show popup
-
-    $('.comments-detail-send').on('click', function (e) {
-      e.preventDefault();
-      $('.auth-in-comment').fadeIn();
-      $('.auth-in-comment').addClass('is-open');
-      var curentText = $('.form-panel-control').text();
-      document.cookie = "commentText=" + curentText;
-    }); // Add review
-
-    $(".commit-add").on("submit", function (t) {
-      t.preventDefault();
-      var e = !0,
-          i = $(this).find(".required");
-
-      if ($(i).each(function () {
-        $(this).val() ? $(this).removeClass("empty-field") : ($(this).addClass("empty-field"), e = !1);
-      }), 1 == e) {
-        $(".commit-add .text-danger").empty();
-        var s = $(this).serialize();
-        $.ajax({
-          type: "POST",
-          data: s,
-          url: "/include/ajax/add-comment.handler.php",
-          success: function success(data) {
-            $(".commit-add")[0].reset();
-            var answer = JSON.parse(data);
-
-            if (answer.status == 'good') {
-              scriptFunctions.showSuccessMess("/include/ajax/comment-success-form.php");
-              document.cookie = "commentText=undefined; expires=Mon, 01-Jan-2001 00:00:00 GMT";
-              $('.comments-detail-form .form-panel-control').html(""); // Если обновление то удалить комменьарий
-
-              $('body .removeItem').remove();
-              var dupdate = parseInt($('.form-panel-control').attr('data-update'));
-
-              if (dupdate) {
-                $('.comment-item[data-id="+dupdate+"]');
-                var deleteItem = 'delete=' + dupdate;
-                $.ajax({
-                  type: "POST",
-                  data: deleteItem,
-                  url: "/include/ajax/delete-comment.php"
-                });
-              }
-
-              scriptFunctions.commentListHandler();
-            } else if (answer.status === 'stop') {
-              $('.comments-detail-form textarea').val(answer.message);
-              $('.comments-detail-form .form-panel-control').html(answer.updateMessage);
-              $(".commit-add .text-danger").text(answer.errorMessage);
-              document.cookie = "commentText=undefined; expires=Mon, 01-Jan-2001 00:00:00 GMT";
-            } else {}
-          },
-          error: function error(data) {
-            alert("Произошла ошибка. Обратитесь к администратору");
-          }
-        });
-      } else $(".commit-add .text-danger").text("Заполните обязательные поля");
-    });
-  },
-  getCookie: function getCookie(c_name) {
-    try {
-      var i,
-          x,
-          y,
-          ARRcookies = document.cookie.split(";");
-
-      for (i = 0; i < ARRcookies.length; i++) {
-        x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
-        y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
-        x = x.replace(/^\s+|\s+$/g, "");
-        if (x == c_name) return unescape(y);
-      }
-    } catch (err) {
-      return false;
-    }
-
-    return false;
-  },
-  formCommentHandler: function formCommentHandler() {
-    $('.form-panel-control').keyup(function () {
-      $(this).children().removeClass('error_control');
-      var userText = $(this).text();
-      $('.form-control').val(userText.replace(/^\s*/, '').replace(/\s*$/, ''));
-    });
-  },
-  startTimer: function startTimer() {
-    // Show start time in forecast
-    var t = window.location.href.split("/");
-    "blog" == t[3] && void 0 !== t[5] && 0 < t[5].length && $.ajax({
-      url: "/include/ajax/counter.php?code=" + t[5],
-      success: function success(t) {
-        $(".counter a.view").html(t);
-      }
-    }), $(".star-time span").length && $(".star-time span").each(function () {
-      !function (s, n) {
-        function t() {
-          var t = s.split(":"),
-              e = 60 * +t[0] * 60 + 60 * +t[1] + +t[2];
-          a = e - ((Date.now() - l) / 1e3 | 0);
-          var hours = a / 3600 | 0,
-              r = a / 60 - 60 * hours | 0,
-              o = a % 60 | 0,
-              hours = hours < 10 ? "0" + hours : hours,
-              r = r < 10 ? "0" + r : r,
-              o = o < 10 ? "0" + o : o;
-          var i = hours + ":" + r + ":" + o;
-          n.text(i), a <= 0 && (l = Date.now() + 1e3);
-        }
-
-        var a,
-            r,
-            o,
-            l = Date.now();
-        t(), setInterval(t, 1e3);
-      }($(this).text(), $(this));
-    });
-  },
-  filterCommentsBy: function filterCommentsBy() {
-    // Filter comments in filter block
-    $(".filter-comments a[data-filter-bookmaker]").on("click", function (t) {
-      t.preventDefault();
-      var e = $(this),
-          i = e.data("filter-from"),
-          s = e.data("filter-bookmaker");
-      i && $.ajax({
-        type: "POST",
-        data: {
-          filterFrom: i,
-          filterBookmaker: s
-        },
-        url: "/include/ajax/comments-list.component.php",
-        success: function success(t) {
-          $(".reviews-block").html(t);
-        },
-        error: function error(t) {
-          alert("Произошла ошибка. Обратитесь к администратору");
-        }
-      }).done(function () {
-        $(".filter-comments a[data-filter-bookmaker]").removeClass("active"), e.addClass("active");
-      });
-    });
-  },
-  downloadBettings: function downloadBettings() {
-    // Load more betters in betting page
-    $(".betting-more-button").length && $(".betting-more-button").on("click", function () {
-      var t = $(this).attr("rel"),
-          e = parseInt($(this).attr("curpage")),
-          i = parseInt($(this).attr("maxpages")),
-          s = parseInt($(this).attr("depth")),
-          n = parseInt(e) + 1;
-      n <= i ? $.get("/include/ajax/betting-pagination.php", {
-        DEPTH: s,
-        SECTION_ID: t,
-        CUR_PAGE: e,
-        MAX_PAGES: i,
-        NEXT_PAGE: n
-      }, function (t) {
-        n == i ? $(".panel.active .betting-more-button").hide() : $(".panel.active .betting-more-button").attr("curpage", n), $(".panel.active .betting-items").append(t);
-      }) : $(".panel.active .betting-more-button").hide();
-    }), $("label.tab").length && $("label.tab").on("click", function () {
-      var t = $(this).attr("for");
-      $(".panel.active").removeClass("active"), $('.panel[id="' + t + '-panel"').addClass("active");
-    });
-  },
-  paymentMethod: function paymentMethod() {
-    if ($(".payment-tab").length) {
-      var clickedTab = $('.js-tabItem.is-select');
-      var tabWrapper = $('.js-tabWrap');
-      var activeTab = tabWrapper.find('.js-tabBlock.is-open');
-      var activeTabHeight = activeTab.outerHeight();
-      tabWrapper.css('min-height', activeTabHeight);
-
-      function tabInit() {
-        clickedTab = $('.js-tabItem.is-active');
-        activeTab.fadeOut(100, function () {
-          $('.js-tabBlock').removeClass('is-open');
-          var clickedTabIndex = clickedTab.index('.js-tabItem');
-          $('.js-tabBlock').eq(clickedTabIndex).addClass('is-open');
-          activeTab = tabWrapper.find('.is-open');
-          activeTabHeight = activeTab.outerHeight();
-          tabWrapper.stop().delay(25).animate({
-            'min-height': activeTabHeight
-          }, 50, function () {
-            activeTab.delay(25).fadeIn(100);
-          });
-        });
-      }
-
-      $('.js-tabList').on('click', '.js-tabItem', function () {
-        $('.js-tabItem').removeClass('is-active');
-        $(this).addClass('is-active');
-        tabInit();
-      });
-    }
-  },
-  initSwipers: function initSwipers() {
-    // Init all swipers on site
-    var e = ["slidesPerView", "freeMode", "spaceBetween", "navigation", "breakpoints"];
-    var swiperParamsObject = {
-      mainBonuses: [4, !1, 20, {
-        nextEl: ".bonuses-wrap .swiper-button-next",
-        prevEl: ".bonuses-wrap .swiper-button-prev"
-      }, {
-        992: {
-          slidesPerView: "auto"
-        }
-      }],
-      mainExperts: [6, !1, 20, {
-        nextEl: null,
-        prevEl: null
-      }, {
-        992: {
-          slidesPerView: "auto",
-          spaceBetween: 10
-        }
-      }],
-      forecastSections: ["auto", !0, 30, {
-        nextEl: null,
-        prevEl: null
-      }, !1],
-      articlesSwiper: [3, !1, 16, {
-        nextEl: ".articles-list .swiper-button-next",
-        prevEl: ".articles-list .swiper-button-prev"
-      }, {
-        768: {
-          slidesPerView: "auto",
-          spaceBetween: 20
-        },
-        992: {
-          slidesPerView: 3,
-          spaceBetween: 15
-        }
-      }],
-      bonusesList: [3, !1, 16, {
-        nextEl: ".bonuses-wrap .swiper-button-next",
-        prevEl: ".bonuses-wrap .swiper-button-prev"
-      }, {
-        992: {
-          slidesPerView: "auto",
-          spaceBetween: 20
-        }
-      }],
-      editorList: [5, !1, 16, {
-        nextEl: ".editor-wrap .swiper-button-next",
-        prevEl: ".editor-wrap .swiper-button-prev"
-      }, {
-        992: {
-          slidesPerView: "auto",
-          spaceBetween: 20
-        }
-      }],
-      sourcesReviews: [3, !1, 16, {
-        nextEl: ".sources-reviews-items .swiper-button-next",
-        prevEl: ".sources-reviews-items .swiper-button-prev"
-      }, {
-        768: {
-          slidesPerView: "auto",
-          spaceBetween: 20
-        },
-        992: {
-          slidesPerView: 3,
-          spaceBetween: 15
-        }
-      }],
-      paymentTab: ["auto", !0, 0, {
-        nextEl: null,
-        prevEl: null
-      }, !1]
-    };
-    var s = ".swiper-container",
-        n = {};
-    $(s).each(function () {
-      var t = $(this).parent().find(s),
-          i = $(this).data("params-key");
-      if (i && $.each(e, function (t, e) {
-        n[e] = swiperParamsObject[i][t];
-      }), !$.isEmptyObject(n)) new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](t, n);
-      i = null, n = {};
-    });
-    new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".players-reviews-block .swiper-container", {
-      slidesPerView: 1,
-      freeMode: !1,
-      spaceBetween: 20,
-      navigation: {
-        nextEl: ".players-reviews-block .swiper-button-next",
-        prevEl: ".players-reviews-block .swiper-button-prev"
-      }
-    }), new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".main-bonus-items.swiper-container", {
-      slidesPerView: 4,
-      freeMode: !1,
-      spaceBetween: 20,
-      navigation: {
-        nextEl: ".bonuses-wrap .swiper-button-next",
-        prevEl: ".bonuses-wrap .swiper-button-prev"
-      },
-      breakpoints: {
-        992: {
-          slidesPerView: "auto"
-        }
-      }
-    }), new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".bonus-page-items.swiper-container, .bonuses-block .swiper-container", {
-      slidesPerView: 3,
-      freeMode: !1,
-      spaceBetween: 16,
-      navigation: {
-        nextEl: ".bonuses-wrap .swiper-button-next",
-        prevEl: ".bonuses-wrap .swiper-button-prev"
-      },
-      breakpoints: {
-        992: {
-          slidesPerView: "auto",
-          spaceBetween: 20
-        }
-      }
-    }), new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".editor-page-items.swiper-container", {
-      slidesPerView: 5,
-      freeMode: !1,
-      spaceBetween: 13,
-      navigation: {
-        nextEl: ".editor-page-items .swiper-button-next",
-        prevEl: ".editor-page-items .swiper-button-prev"
-      },
-      breakpoints: {
-        992: {
-          slidesPerView: "auto",
-          spaceBetween: 20
-        }
-      }
-    }), new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".cols.swiper-container", {
-      slidesPerView: 2,
-      freeMode: !1,
-      spaceBetween: 0,
-      autoHeight: 1,
-      navigation: {
-        nextEl: "#neighbourR",
-        prevEl: "#neighbourL"
-      },
-      breakpoints: {
-        768: {
-          slidesPerView: "1",
-          spaceBetween: 13
-        }
-      }
-    });
-    $(".reviews-slider .swiper-container").each(function () {
-      var t = $(this).data("slider");
-      new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".swiper-block-" + t, {
-        slidesPerView: 1,
-        freeMode: !1,
-        spaceBetween: 20,
-        navigation: {
-          nextEl: ".reviews-slider .swiper-next-" + t,
-          prevEl: ".reviews-slider .swiper-prev-" + t
-        }
-      });
-    });
-  },
-  faqHandler: function faqHandler() {
-    // Search articles
-    $('.input-faq-search').keyup(function () {
-      var find = $(this).val();
-      var element_id = $('.input-faq-search').attr('data-element');
-      $.ajax({
-        type: "POST",
-        url: "/include/ajax/faq-search.php",
-        data: "search=" + find + "&id=" + element_id,
-        success: function success(msg) {
-          if (msg.search('empty_search') != -1) {
-            $('.faq-list-add').empty();
-            $('.faq-list-current').fadeIn(0);
-          } else if (msg.search('not_found') != -1) {
-            $('.faq-list-add').empty();
-            $('.faq-list-add').append('<li><a class="item">Нет результатов поиска</a></li>');
-          } else {
-            var total = msg.split("&");
-
-            if (total.length > 0) {
-              $('.faq-list-current').fadeOut(0);
-              $('.faq-list-add').empty();
-            }
-
-            for (var i = 0; i < total.length - 1; i++) {
-              if (total[i]) {
-                var element_name = total[i].split("_DATA=");
-                $('.faq-list-add').append('<li><a href="/best-bookmakers/' + element_name[2] + '" class="item">' + element_name[1] + '</a></li>');
-              }
-            }
-          }
-        }
-      });
-    });
-  },
-  appLinkHandler: function appLinkHandler() {
-    // App link on bukmaker page
-    if ($('div').hasClass('app-block')) {
-      $('.app-panel .item:eq(0)').addClass('active');
-      $('.app-panel .item').click(function () {
-        $('.app-panel .item').removeClass('active');
-        $(this).addClass('active');
-        var selectApp = $(this).data('source');
-        var selectId = $('.app-panel').data('id');
-        $.ajax({
-          type: "POST",
-          url: "/incude/ajax/site-and-app-content.php",
-          data: "app=" + selectApp + "&id=" + selectId,
-          success: function success(msg) {
-            $('.app-content').empty();
-            $('.app-content').append(msg);
-          }
-        });
-      });
-    }
-  },
-  bookmakerPopHandler: function bookmakerPopHandler() {
-    $(function () {
-      if ($('section').hasClass('ratings-detail-page')) {
-        $('.footer').addClass('footer-show-all');
-        var curentWidth = parseInt($('body').css('width'));
-        var startHeight = document.documentElement.clientHeight;
-        $(window).scroll(function () {
-          var scrollCurrent = $(window).scrollTop();
-
-          if (scrollCurrent > startHeight) {
-            if (!$('.bookmaker-pop-panel').hasClass('show')) {
-              $('.bookmaker-pop-panel').addClass('show');
-            }
-          } else {
-            if ($('.bookmaker-pop-panel').hasClass('show')) {
-              $('.bookmaker-pop-panel').removeClass('show');
-            }
-          }
-        });
-      }
-    });
-  },
-  advancedMoreHendler: function advancedMoreHendler() {
-    $('.advanced-more-btn').on('click', function () {
-      var advBlock = $(this).parent().find('.advanced-more');
-      $(this).fadeOut(0);
-      advBlock.css('height', 'auto');
-      advBlock.css('position', 'static');
-    });
-  },
-  screenContainerHandler: function screenContainerHandler() {
-    // Add img in parent class
-    if ($('.inner-workarea div.additional-info-block').length > 0) {
-      $('.additional-info-block img').each(function () {
-        var parent = $(this).parent();
-        var src = $(this).attr('src');
-        parent.empty();
-        parent.append('<div class="screen-container"><img src="' + src + '"></div>');
-      });
-    }
-  },
-  commentListHandler: function commentListHandler() {
-    var full = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var panel = $('.comments-list-panel');
-
-    if (panel.length > 0) {
-      panel.empty();
-      var data = {
-        load: panel.data('iblock'),
-        id: panel.data('comment-id'),
-        total: full
-      };
-      $.get('/include/ajax/get-comment.php', data, function (html) {
-        panel.append(html);
-      });
-    }
-  },
-  editComment: function editComment() {
-    $(document).on('click', '.cmi-edit', function () {
-      var textDetail = $(this).parent().parent().find('div.comment-detail-text').text();
-      $('.comment-item').removeClass("removeItem");
-      $(this).parent().parent().addClass("removeItem");
-      $('.form-panel-control').empty();
-      $('.form-panel-control').append(textDetail);
-      $('.form-control').val(textDetail.replace(/^\s*/, '').replace(/\s*$/, ''));
-      var commentId = $(this).parent().parent().attr('data-id');
-      $('.form-panel-control').attr('data-update', commentId);
-      $([document.documentElement, document.body]).animate({
-        scrollTop: $(".commit-add").offset().top
-      }, 500);
-    });
-  },
-  deleteComment: function deleteComment() {
-    var comment = $(".remove-item-old").parent().parent();
-    comment.fadeOut();
-
-    if (parseInt(comment.data('id'))) {
-      $.post("/include/ajax/delete-comment.php", 'delete=' + comment.data('id'));
-      scriptFunctions.closeSuccessMess();
-    }
-  },
-  init: function init() {
-    this.hideEmptyClass(), this.addReview(), this.addCommit(), this.startTimer(), this.filterCommentsBy(), this.downloadBettings(), this.paymentMethod(), this.initSwipers(), this.faqHandler(), this.appLinkHandler(), this.bookmakerPopHandler(), this.screenContainerHandler(), this.formCommentHandler(), this.commentListHandler(), this.editComment(), this.advancedMoreHendler();
-  }
-};
-
-function initSliderNews() {
-  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".related-news-items.swiper-container", {
-    slidesPerView: 'auto',
-    freeMode: true
-  });
-} // current script
-
-
-$(function () {
-  $(document).on('click', '.more-btn-comment', function () {
-    scriptFunctions.commentListHandler(true);
-  });
-  $(document).on('click', '.cmi-delete', function () {
-    $('.cmi-delete').removeClass("remove-item-old");
-    $(this).addClass("remove-item-old");
-    scriptFunctions.showSuccessMess("/include/ajax/delete-form.php");
-  });
-  $(document).on('click', '.delete-btn', function () {
-    scriptFunctions.deleteComment();
-  }); // Close modal
-
-  $(document).on("click", ".js-modal-close", function () {
-    scriptFunctions.closeSuccessMess();
-  });
-  /** Подгрузка ссылки на источник */
-
-  if ($('.news-src').length === 1) {
-    $('.news-src').load('/include/ajax/news-src.php?NID=' + $('.news-src').attr('date-id'));
-  }
-  /** Подгрузка банера в детальной прогноза */
-
-
-  if ($('.head-expert').length > 0) {
-    $.get("/include/ajax/head-expert.php", function (data) {
-      $('.head-expert').prepend(data);
-    });
-  }
-
-  if ($('div.material-panel').length > 0 && $('a.material-item').length > 0) {
-    var firstMaterial = $('.material-panel .material-item:eq(0)');
-    var curentMaterial = firstMaterial.data('material');
-    var idAuthor = firstMaterial.parent().data('author');
-    firstMaterial.addClass('active');
-    loadMaterial(idAuthor, curentMaterial);
-  }
-
-  $('.material-item').on('click', function () {
-    $('.material-item').removeClass('active');
-    var curentMaterial = $(this).data('material');
-    var idAuthor = $(this).parent().data('author');
-
-    if (curentMaterial === 'm-forecast') {
-      $('.material-content').addClass('forecast-items');
-      loadMaterial(idAuthor, curentMaterial, true);
-    } else {
-      loadMaterial(idAuthor, curentMaterial);
-    }
-
-    $(this).addClass('active');
-  });
-
-  function loadMaterial(idAuthor, curentMaterial) {
-    var timer = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-    $.ajax({
-      type: 'GET',
-      url: '/include/ajax/load-author-content.php',
-      data: 'id_author=' + idAuthor + '&material=' + curentMaterial,
-      success: function success(msg) {
-        $('.material-content').empty();
-        $('.material-content').append(msg);
-        $('.star-time span').each(function () {
-          !function (s, n) {
-            function t() {
-              var t = s.split(':'),
-                  e = 60 * +t[0] * 60 + 60 * +t[1] + +t[2];
-              a = e - ((Date.now() - l) / 1e3 | 0), hours = a / 3600 | 0, r = a / 60 - 60 * hours | 0, o = a % 60 | 0, hours = hours < 10 ? '0' + hours : hours, r = r < 10 ? '0' + r : r, o = o < 10 ? '0' + o : o;
-              var i = hours + ':' + r + ':' + o;
-              n.text(i), a <= 0 && (l = Date.now() + 1e3);
-            }
-
-            var a,
-                r,
-                o,
-                l = Date.now();
-            setInterval(t, 1e3);
-          }($(this).text(), $(this));
-        });
-      }
-    });
-  }
-
-  scriptFunctions.init(); // Animate scroll and remove links
-
-  $(function () {
-    // Check, if link not found and remove
-    if ($("#left-bk-menu").is(":visible")) {
-      var menuScrollElements = "#left-bk-menu ul .item-link[href^='#']";
-      $(menuScrollElements).each(function () {
-        var elemId = $(this).data("id");
-
-        if ($("#" + elemId).length === 0) {
-          $(this).parent().remove();
-        } else {
-          $(this).click(function () {
-            var _href = $(this).attr("href");
-
-            $("html, body").animate({
-              scrollTop: $(_href).offset().top - 130 + "px"
-            });
-            return false;
-          });
-        }
-      });
-    }
-  });
-  var $sideMenu = $(".sidebar-menu");
-
-  if ($sideMenu.length > 0) {
-    $sideMenu.find(".submenu").each(function () {
-      var $submenu = $(this);
-      var $item = $submenu.parent();
-      var $link = $item.children().first();
-      $item.addClass("parent");
-      $('<i></i>').insertBefore($submenu);
-
-      if ($(window).width() < 768) {
-        var $tempSelect = $('<select><option value="' + ($link.attr("href") ? $link.attr("href") : '') + '">' + $link.text() + '</option></select>'); //.prop("multiple", true);
-
-        $item.append($tempSelect);
-        $submenu.find("a").each(function () {
-          $tempSelect.append('<option value="' + $(this).attr("href") + '">' + $(this).text() + '</option>');
-        });
-        $tempSelect.on("change", function (event) {
-          $(this).parent().removeClass("active");
-          location.href = $(this).val();
-        }).on("click blur keypress", function (event) {
-          $(this).parent().removeClass("active");
-        });
-        $submenu.remove();
-      }
-    });
-    $sideMenu.on("click", function (event) {
-      if ($(event.target).is(".sidebar-menu")) {
-        $(this).toggleClass("active");
-      }
-    });
-    $sideMenu.find("li").on("click", function (event) {
-      if ($(event.target).is("i")) {
-        $(this).toggleClass("active");
-      } else {
-        if (!$(event.target).is("a")) event.preventDefault();
-      }
-    });
-  }
-
-  $('.tag-tabs li a').click(function (e) {
-    e.preventDefault();
-    window.location.href = $(this).attr('href');
-  });
-});
-/** Новости */
-
-$(function () {
-  initSliderNews();
-
-  if ($(".news-infinitely").length) {
-    $('html, body').animate({
-      scrollTop: 0
-    }, 500);
-
-    function come(elem) {
-      var docViewTop = $(window).scrollTop(),
-          docViewBottom = docViewTop + $(window).height(),
-          elemTop = $(elem).offset().top,
-          elemBottom = elemTop + $(elem).height();
-      return elemBottom <= docViewBottom && elemTop >= docViewTop;
-    }
-
-    $(window).scroll(function () {
-      $('.hash').each(function () {
-        var top = window.pageYOffset;
-        var distance = top - $(this).offset().top + 160;
-        var hash = $(this).data('url');
-        var meta = $(this).data('meta');
-        var currentHash = '';
-
-        if (distance < 30 && distance > -30 && currentHash !== hash) {
-          currentHash = hash;
-          history.pushState('', '', hash);
-          document.title = meta.title;
-          $('meta[name="description"]').attr('content', meta.description);
-        }
-      });
-
-      if ($('#next_news').length && !loading) {
-        var loading = false;
-        var paddingHeight = 2500;
-
-        if ($(window).scrollTop() + paddingHeight >= $(document).height() - $(window).height()) {
-          loading = true;
-          var loadingHeight = come('#next_news');
-          var page = $('#next_news').data('url');
-
-          if (loadingHeight && loading) {
-            $("#next_news").remove();
-            $.get(page, {
-              action: 'load-next-news'
-            }, function (data) {
-              $('.news-infinitely').last().after(data);
-
-              if ($('.news-src').is(':empty')) {
-                $('.news-src').last().load('/include/ajax/news-src.php?NID=' + $('.news-src').last().attr('date-id'));
-              }
-
-              loadingHeight = come('#next_news');
-              page = $('#next_news').data('url');
-              loading = false;
-              initSliderNews();
-            });
-          }
-        }
-      }
-    });
-  }
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+ //import '../blocks/sentiment/sentiment';
 
 /***/ }),
 
@@ -21499,7 +20894,7 @@ $(function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function($) {$(function () {
-  var symbols = ['<symbol id="up" viewBox="0 0 22.08 22.08"><polygon points="8.54 7.08 13.54 7.08 13.54 22.08 8.54 22.08 8.54 7.08"/><polygon points="19.14 8.25 2.94 8.25 11.04 0 19.14 8.25"/></symbol>', '<symbol id="arrow" viewBox="0 0 12 12"><path d="M2.29,1.41,6.88,6,2.29,10.59,3.71,12l6-6-6-6Z"/></symbol>', '<symbol id="right-arrow" viewBox="0 0 8 12"><path d="M.59 1.41L5.17 6 .59 10.59 2 12l6-6-6-6z"/></symbol>', '<symbol id="left-arrow" viewBox="0 0 8 12"><path d="M7.41 10.59L2.83 6l4.58-4.59L6 0 0 6l6 6z"/></symbol>', '<symbol id="bottom-arrow" viewBox="0 0 12 8"><path d="M10.59.59L6 5.17 1.41.59 0 2l6 6 6-6z"/></symbol>', '<symbol id="close" viewBox="0 0 12.73 12.73"><path d="M0,1.41,1.41,0,12.73,11.31l-1.42,1.42Z"/><path d="M1.41,12.73,0,11.31,11.31,0l1.42,1.41Z"/></symbol>', '<symbol id="search" viewBox="0 0 17.49 17.49"><path d="M12.5,10.91h-.79l-.28-.26A6,6,0,0,0,13,6.59,6.37,6.37,0,0,0,6.5.36,6.37,6.37,0,0,0,0,6.59a6.37,6.37,0,0,0,6.5,6.23,6.63,6.63,0,0,0,4.23-1.5l.27.27v.75l5,4.79,1.49-1.43Zm-6,0A4.41,4.41,0,0,1,2,6.59,4.41,4.41,0,0,1,6.5,2.28,4.41,4.41,0,0,1,11,6.59,4.41,4.41,0,0,1,6.5,10.91Z"/></symbol>', '<symbol id="search-o" viewBox="0 0 16.41 16.41"><path d="M13,11.09l3.4,3.41L15,15.91l-3.26-3.26A7,7,0,1,1,13,11.09ZM7,12.5a5,5,0,1,0-5-5A5,5,0,0,0,7,12.5Z"/></symbol>', '<symbol id="user" viewBox="0 0 16 18"><path d="M8 0c2.344 0 4.235 1.809 4.235 4.05 0 2.241-1.891 4.05-4.235 4.05-2.344 0-4.235-1.809-4.235-4.05C3.765 1.809 5.656 0 8 0zM8 18c-3.333 0-6.28-1.829-8-4.6C.04 10.557 5.333 9 8 9c2.653 0 7.96 1.557 8 4.4-1.72 2.771-4.667 4.6-8 4.6z"/></symbol>', '<symbol id="rating" viewBox="0 0 16.5 16.5"><path d="M14.67,0H1.83A1.83,1.83,0,0,0,0,1.83V14.67A1.84,1.84,0,0,0,1.83,16.5H14.67a1.83,1.83,0,0,0,1.83-1.83V1.83A1.83,1.83,0,0,0,14.67,0Zm0,14.67H1.83V1.83H14.67Zm-11-8.25H5.5v6.41H3.67ZM7.33,3.67H9.17v9.16H7.33ZM11,9.17h1.83v3.66H11Z"/></symbol>', '<symbol id="star" viewBox="0 0 18.33 18.33"><path d="M18.33,7.09l-6.59-.56L9.17.46,6.59,6.53,0,7.09l5,4.34L3.5,17.87l5.67-3.42,5.66,3.42-1.49-6.44Z"/></symbol>', '<symbol id="star-o" viewBox="0 0 18.33 18.33"><path d="M18.33,7.09l-6.59-.56L9.17.46,6.59,6.53,0,7.09l5,4.34L3.5,17.87l5.67-3.42,5.66,3.42-1.49-6.44ZM9.17,12.74,5.72,14.82l.92-3.92-3-2.64,4-.35L9.17,4.22l1.56,3.7,4,.35L11.7,10.91l.92,3.92Z"/></symbol>', '<symbol id="round" viewBox="0 0 18.33 18.33"><path d="M9.17,0a9.17,9.17,0,1,0,9.16,9.17A9.18,9.18,0,0,0,9.17,0Zm0,16.5A7.34,7.34,0,0,1,1.83,9.17h0A7.34,7.34,0,0,1,9.16,1.83h0A7.33,7.33,0,0,1,16.5,9.16h0A7.33,7.33,0,0,1,9.17,16.5Z"/><circle cx="9.17" cy="9.17" r="4.58" fill="#d0021b"/></symbol>', '<symbol id="gift" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M2.712 3.4a2.444 2.444 0 0 1-.162-.877C2.55 1.13 3.718 0 5.16 0 6.091 0 7.57 1.113 8.5 2.276 9.429 1.113 10.909 0 11.84 0c1.442 0 2.61 1.13 2.61 2.523 0 .309-.057.604-.162.877H15.3A1.7 1.7 0 0 1 17 5.1v2.55a1.7 1.7 0 0 1-.864 1.48 1.7 1.7 0 0 1 .014.22v5.95a1.7 1.7 0 0 1-1.7 1.7H2.55a1.7 1.7 0 0 1-1.7-1.7V9.35a1.867 1.867 0 0 1 .014-.22A1.7 1.7 0 0 1 0 7.65V5.1a1.7 1.7 0 0 1 1.7-1.7h1.012zm7.068-.001c.225.003.473-.001.74-.01l.374-.015c.32-.013.665-.027.947-.027.556 0 .909-.422.909-.824 0-.394-.34-.808-.88-.823-.002.004-.141.032-.43.202-.323.19-.696.479-1.053.824a6.411 6.411 0 0 0-.607.673zM7.04 5.1H1.7v2.55h5.95V5.1h-.61zm2.31 0h5.95v2.55H9.35V5.1zm-1.7 4.25h-5.1v5.95h5.1V9.35zm1.7 5.95V9.35h5.1v5.95h-5.1zM6.48 3.389c.267.009.515.013.74.01a6.411 6.411 0 0 0-.607-.673 5.872 5.872 0 0 0-1.054-.824c-.24-.14-.376-.184-.416-.197L5.129 1.7c-.538.015-.879.429-.879.823 0 .402.353.824.91.824.281 0 .626.014.946.027l.374.015z"/></symbol>', '<symbol id="toggle" viewBox="0 0 16.5 16.5"><path d="M0,13.75H11V11.92H0Zm0-11V4.58H16.5V2.75ZM0,9.17H16.5V7.33H0Z"/></symbol>', '<symbol id="notify" viewBox="0 0 19.5 19.5"><path d="M15.75,13.5v-5c0-3.07-1.64-5.64-4.5-6.32V1.5a1.5,1.5,0,0,0-3,0v.68c-2.87.68-4.5,3.24-4.5,6.32v5l-2,2v1h16v-1Zm-6,6a2,2,0,0,0,2-2h-4A2,2,0,0,0,9.75,19.5Z"/></symbol>', '<symbol id="mail" viewBox="0 0 18 18"><path d="M16.2,2H1.8A1.77,1.77,0,0,0,0,3.75v10.5A1.78,1.78,0,0,0,1.8,16H16.2A1.78,1.78,0,0,0,18,14.25V3.75A1.78,1.78,0,0,0,16.2,2Zm0,4.5L9,10.88,1.8,6.5V4.75L9,9.13l7.2-4.38Z"/></symbol>', '<symbol id="setting" viewBox="0 0 12.8 12.8"><path d="M11.16,7a6.06,6.06,0,0,0,0-.62,4.1,4.1,0,0,0,0-.62L12.5,4.72a.32.32,0,0,0,.08-.41L11.3,2.1A.31.31,0,0,0,10.91,2l-1.59.64A5,5,0,0,0,8.24,2L8,.27A.31.31,0,0,0,7.68,0H5.12a.3.3,0,0,0-.31.27L4.57,2a4.81,4.81,0,0,0-1.08.62L1.9,2a.33.33,0,0,0-.4.15L.22,4.31a.32.32,0,0,0,.08.41L1.66,5.78a3.18,3.18,0,0,0-.06.62,4.21,4.21,0,0,0,0,.62L.3,8.08a.32.32,0,0,0-.08.41L1.5,10.7a.31.31,0,0,0,.39.15l1.59-.64a5,5,0,0,0,1.08.62l.24,1.7a.32.32,0,0,0,.32.27H7.68A.3.3,0,0,0,8,12.53l.24-1.7a4.81,4.81,0,0,0,1.08-.62l1.59.64a.33.33,0,0,0,.4-.15l1.28-2.21a.32.32,0,0,0-.08-.41ZM6.4,8.8A2.4,2.4,0,1,1,8.8,6.4,2.41,2.41,0,0,1,6.4,8.8Z"/></symbol>', '<symbol id="calendar" viewBox="0 0 20 20"><path d="M15.5,20H4.5a4,4,0,0,1-4-4V5.6a4,4,0,0,1,4-4h11a4,4,0,0,1,4,4V16A4,4,0,0,1,15.5,20ZM4.5,3.2A2.41,2.41,0,0,0,2.1,5.6V16a2.41,2.41,0,0,0,2.4,2.4h11A2.41,2.41,0,0,0,17.9,16V5.6a2.41,2.41,0,0,0-2.4-2.4Z"/><path d="M18.71,7.4H1.29V5.6H18.71ZM2.09,6.6V6.4"/><rect x="13.17" y="8.8" width="3.17" height="3.2" rx="0.8" ry="0.8"/><rect x="8.42" y="8.8" width="3.17" height="3.2" rx="0.8" ry="0.8"/><rect x="13.17" y="13.6" width="3.17" height="3.2" rx="0.8" ry="0.8"/><rect x="8.42" y="13.6" width="3.17" height="3.2" rx="0.8" ry="0.8"/><rect x="3.67" y="13.6" width="3.17" height="3.2" rx="0.8" ry="0.8"/><path d="M5.36,4.8a.9.9,0,0,1-.9-.9V.9a.9.9,0,0,1,1.8,0v3A.9.9,0,0,1,5.36,4.8Z"/><path d="M14.86,4.8a.9.9,0,0,1-.9-.9V.9a.9.9,0,0,1,1.8,0v3A.9.9,0,0,1,14.86,4.8ZM15,.9v3"/></symbol>', '<symbol id="chat" viewBox="0 0 15 15"><path d="M13.5,0H1.5A1.5,1.5,0,0,0,0,1.5V15l3-3H13.5A1.51,1.51,0,0,0,15,10.5v-9A1.5,1.5,0,0,0,13.5,0Zm0,10.5H3L1.5,12V1.5h12Z"/></symbol>', '<symbol id="filter" viewBox="0 0 13.86 13.86"><path d="M5.52,9.44h7.84a.5.5,0,0,0,0-1H5.52A1.79,1.79,0,0,0,3.8,7.16,1.76,1.76,0,0,0,2.1,8.44H.5a.5.5,0,0,0,0,1H2.1a1.78,1.78,0,0,0,3.42,0ZM3,8.94a.78.78,0,0,1,1.56,0,.79.79,0,0,1-.78.78A.78.78,0,0,1,3,8.94Zm8.5-3.5h1.84a.5.5,0,0,0,0-1H11.52A1.79,1.79,0,0,0,9.8,3.16,1.76,1.76,0,0,0,8.1,4.44H.5a.5.5,0,0,0,0,1H8.1a1.78,1.78,0,0,0,3.42,0ZM9,4.94a.78.78,0,0,1,1.56,0,.79.79,0,0,1-.78.78A.78.78,0,0,1,9,4.94Z"/></symbol>', '<symbol id="clock" viewBox="0 0 64 64"><path d="M32,0C14.355,0,0,14.355,0,32s14.355,32,32,32s32-14.355,32-32S49.645,0,32,0z M32,60   C16.561,60,4,47.439,4,32S16.561,4,32,4s28,12.561,28,28S47.439,60,32,60z"/><path d="m43.639,24.572l-11.201,5.037-13.29-13.291c-0.781-0.781-2.047-0.781-2.828,0s-0.781,2.047 0,2.828l14.266,14.268c0.029,0.029 0.068,0.039 0.098,0.066 0.143,0.125 0.297,0.227 0.465,0.307 0.061,0.029 0.117,0.061 0.182,0.082 0.212,0.078 0.435,0.131 0.665,0.131 0.002,0 0.004,0 0.004,0l0,0c0.004,0 0.008-0.002 0.012-0.002 0.264-0.002 0.525-0.061 0.773-0.166 0.012-0.006 0.023-0.002 0.035-0.008l12.459-5.604c1.008-0.453 1.457-1.637 1.004-2.645-0.455-1.005-1.635-1.454-2.644-1.003z"/></symbol>', '<symbol id="tv" viewBox="0 0 18.33 18.33"><path d="M16.67,1.66h-15A1.67,1.67,0,0,0,0,3.33v10A1.67,1.67,0,0,0,1.67,15H5.83v1.66H12.5V15h4.17a1.66,1.66,0,0,0,1.65-1.67v-10A1.67,1.67,0,0,0,16.67,1.66Zm0,11.67h-15v-10h15Z"/><polygon points="13.17 8.16 7.17 11.16 7.17 5.17 13.17 8.16"/></symbol>', '<symbol id="fire" viewBox="0 0 14 14"><path d="M8.33,0C6.66.65,3.67,3.17,5.05,8c.07.73-.39.64-.62.5-1-.89-.91-3.11-.73-4.1-1.32,1.74-3.14,5.86.19,8.39a5,5,0,0,0,7.24-1c.83-1.28,1.8-4.35-.91-6.38S7.83,1,8.33,0ZM7.91,8.58l.36.47a2.7,2.7,0,0,1,.31,2.4A1.88,1.88,0,0,1,5.33,12c.67-.36,1.9-1.38,1.47-2.6A3.09,3.09,0,0,1,6.8,7,14.09,14.09,0,0,0,7.91,8.58Z"/></symbol>', '<symbol id="paper" viewBox="0 0 18 22"><path d="M4.667 15.333h8.666V17.5H4.667v-2.167zm0-4.333h8.666v2.167H4.667V11zm6.5-10.833l6.5 6.5v13a2.173 2.173 0 0 1-2.167 2.166H2.49a2.164 2.164 0 0 1-2.157-2.166V2.333C.333 1.142 1.308.167 2.5.167h8.667zm4.333 19.5V7.75h-5.417V2.333H2.5v17.334h13z"/></symbol>', '<symbol id="web" viewBox="0 0 26 26"><path d="M13 2c6.072 0 11 4.928 11 11s-4.928 11-11 11S2 19.072 2 13 6.928 2 13 2zm6.49 16.929A8.753 8.753 0 0 0 21.8 13c0-3.685-2.277-6.842-5.5-8.151V5.3c0 1.21-.99 2.2-2.2 2.2h-2.2v2.2c0 .605-.495 1.1-1.1 1.1H8.6V13h6.6c.605 0 1.1.495 1.1 1.1v3.3h1.1c.99 0 1.804.638 2.09 1.529zm-7.59 2.794V19.6c-1.21 0-2.2-.99-2.2-2.2v-1.1l-5.269-5.269A8.93 8.93 0 0 0 4.2 13a8.787 8.787 0 0 0 7.7 8.723z"/></symbol>', '<symbol id="comment" viewBox="0 0 50 40"><polygon points="8.7 39.68 9.93 26.7 -2.34 22.27 13.02 14.87 18.69 1.41 26.94 9.82 42.71 5.92 32.46 18.52 36.54 29.57 21.95 28.95 8.7 39.68" fill="#fff"/><rect x="2" y="2" width="46" height="26.32" fill="#fff"/><path d="M10,37.12l12.78-8.69H45a3,3,0,0,0,3-3V5a3,3,0,0,0-3-3H5A3,3,0,0,0,2,5V25.43a3,3,0,0,0,3,3h5Zm13.4-6.69L9.56,39.83a1,1,0,0,1-1.39-.26A1.06,1.06,0,0,1,8,39V30.44H5a5,5,0,0,1-5-5V5A5,5,0,0,1,5,0H45a5,5,0,0,1,5,5V25.43a5,5,0,0,1-5,5Z"/></symbol>', '<symbol id="comment-o" viewBox="0 0 50 40"><path d="M10,37.12l12.78-8.69H45a3,3,0,0,0,3-3V5a3,3,0,0,0-3-3H5A3,3,0,0,0,2,5V25.43a3,3,0,0,0,3,3h5Zm13.4-6.69L9.56,39.83a1,1,0,0,1-1.39-.26A1,1,0,0,1,8,39V30.44H5a5,5,0,0,1-5-5V5A5,5,0,0,1,5,0H45a5,5,0,0,1,5,5V25.43a5,5,0,0,1-5,5Z"/></symbol>', '<symbol id="comment-b" viewBox="0 0 18 14.36"><path d="M2.93,14.36V10.67H2a2,2,0,0,1-2-2V2A2,2,0,0,1,2,0H16a2,2,0,0,1,2,2V8.67a2,2,0,0,1-2,2H8.58ZM2,1.5a.5.5,0,0,0-.5.5V8.67a.5.5,0,0,0,.5.5H4.43v2.42l3.7-2.42H16a.5.5,0,0,0,.5-.5V2a.5.5,0,0,0-.5-.5Z"/></symbol>', '<symbol id="comment-bold" viewBox="0 0 44 30"><path d="M20.28,20.8H39a3,3,0,0,0,3-3V5a3,3,0,0,0-3-3H5A3,3,0,0,0,2,5V17.8a3,3,0,0,0,3,3H9v6.47Zm.54,2L8.5,29.87a1,1,0,0,1-1.37-.37A1.06,1.06,0,0,1,7,29V22.8H5a5,5,0,0,1-5-5V5A5,5,0,0,1,5,0H39a5,5,0,0,1,5,5V17.8a5,5,0,0,1-5,5Z"/></symbol>', '<symbol id="line" viewBox="0 0 231 28"><path d="M13 0h218l-.307.098A18.921 18.921 0 0 0 218 14v-1c0 8.284-6.716 15-15 15H28c-8.284 0-15-6.716-15-15v1l-.46-1.668A17.572 17.572 0 0 0 0 0h13z"/></symbol>', '<symbol id="line-short" viewBox="0 0 189 32"><path d="M15 0h174c-3.578.95-6.617 2.798-9.117 5.545-2.5 2.748-4.461 6.394-5.883 10.94V16c0 8.837-7.163 16-16 16H30c-8.284 0-15-6.716-15-15v.515c-.864-4.178-2.546-7.727-5.046-10.646C7.454 3.949 4.136 1.66 0 0h15z"></path></symbol>', '<symbol id="tax" viewBox="0 0 22.53 22.53"><path d="M14.68,20.59l0,0L18,17.32l-.13,0H14.79c-.11,0-.12.05-.12.14v3s0,.08,0,.12M4.31,11.26v9.68c0,.16,0,.16.17.16h8.6c.17,0,.18,0,.18-.17V16.05c0-.17,0-.18.17-.18H18c.18,0,.18,0,.18-.19v-14c0-.21,0-.21-.2-.21H4.48c-.17,0-.17,0-.17.17v9.67m-1.41,0V.29c0-.33,0-.29.28-.29H19.43c.2,0,.2,0,.2.21V17.53a.42.42,0,0,1-.13.33l-4.6,4.56a.35.35,0,0,1-.27.11H3.11c-.21,0-.21,0-.21-.21v-11"/><path d="M14.05,11.79l.23,0a.6.6,0,0,0,.49-.32,1.14,1.14,0,0,0,0-.85.58.58,0,0,0-.38-.37,1.13,1.13,0,0,0-.79,0,.48.48,0,0,0-.29.3,1.19,1.19,0,0,0,0,.7.6.6,0,0,0,.47.49l.26,0m2.23-.8a2.34,2.34,0,0,1-2.22,2.22A2.34,2.34,0,0,1,11.87,11,2.35,2.35,0,0,1,14.1,8.76,2.36,2.36,0,0,1,16.27,11M8.6,6.3v0h.16a.63.63,0,0,0,.61-.46,1.27,1.27,0,0,0,0-.67.57.57,0,0,0-.46-.43,1.55,1.55,0,0,0-.48,0,.58.58,0,0,0-.56.45,1.17,1.17,0,0,0,0,.67.58.58,0,0,0,.38.41,2.17,2.17,0,0,0,.35.07m0,1.41a2.35,2.35,0,0,1-2.2-2.22,2.37,2.37,0,0,1,2.2-2.23,2.35,2.35,0,0,1,2.21,2.22A2.33,2.33,0,0,1,8.62,7.71m5.17-2.63a.71.71,0,0,1,.54,1.15,2.83,2.83,0,0,1-.24.25L9.46,11.15a.68.68,0,0,1-.69.23.71.71,0,0,1-.53-.85.94.94,0,0,1,.1-.23,1.71,1.71,0,0,1,.18-.2l4.71-4.76a.73.73,0,0,1,.56-.26"/></symbol>', '<symbol id="surprise" viewBox="0 0 36 36"><path d="M35.73,20.13l-6-2.22a1.37,1.37,0,0,1-.77-.83l-1.75-6.15c-.1-.34-.35-.39-.57-.12l-3.95,5a1.37,1.37,0,0,1-1,.47l-1.81-.06a.38.38,0,0,0-.4.57l.23.61a1,1,0,0,0,.86.61l1.9.07a1.44,1.44,0,0,0,1-.47l2.42-3c.22-.27.47-.22.57.12l1,3.62a1.37,1.37,0,0,0,.76.84l3.61,1.37c.33.12.36.38.07.57l-3.13,2.11a1.43,1.43,0,0,0-.56,1l-.18,3.86c0,.35-.25.46-.53.24l-3-2.33a1.41,1.41,0,0,0-1.11-.22l-3.72,1c-.34.09-.52-.1-.4-.43l.34-.93a.56.56,0,0,0-.33-.74l-.07,0-.48-.13A.71.71,0,0,0,18,25L16.5,29c-.12.33.06.52.39.42L23,27.73a1.41,1.41,0,0,1,1.11.21l5,3.95c.27.22.51.1.52-.24l.25-6.4a1.41,1.41,0,0,1,.55-1l5.3-3.57c.29-.18.26-.43-.07-.56ZM19.59,22.3l-2.25-6a1.41,1.41,0,0,1,.12-1.12L21,9.84c.19-.3.06-.52-.29-.51l-6.37.3a1.48,1.48,0,0,1-1-.47l-4-5c-.22-.27-.48-.22-.57.12L7,10.46a1.4,1.4,0,0,1-.76.84l-6,2.27c-.33.13-.36.38-.06.57l5.34,3.52a1.41,1.41,0,0,1,.56,1l.3,6.4c0,.35.25.45.52.24l5-4A1.42,1.42,0,0,1,13,21.05l6.16,1.68C19.53,22.82,19.71,22.63,19.59,22.3Z"/></symbol>', '<symbol id="photo" viewBox="0 0 20 20"><path d="M17.25,18H2.75A2.75,2.75,0,0,1,0,15.25V4.75A2.75,2.75,0,0,1,2.75,2h14.5A2.75,2.75,0,0,1,20,4.75v10.5A2.75,2.75,0,0,1,17.25,18ZM2.75,3.5A1.25,1.25,0,0,0,1.5,4.75v10.5A1.25,1.25,0,0,0,2.75,16.5h14.5a1.25,1.25,0,0,0,1.25-1.25V4.75A1.25,1.25,0,0,0,17.25,3.5Z"/><polygon points="15.17 17.62 8.25 11.94 1.42 16.62 0.58 15.38 8.33 10.06 11.91 13 15.84 10.57 20.01 13.38 19.18 14.62 15.8 12.36 13.14 14.01 16.12 16.46 15.17 17.62"/><path d="M12,9.75A2.75,2.75,0,1,1,14.75,7,2.75,2.75,0,0,1,12,9.75Zm0-4A1.25,1.25,0,1,0,13.25,7,1.25,1.25,0,0,0,12,5.75Z"/></symbol>', '<symbol id="video" viewBox="0 0 21 21"><path d="M11.25,17.48H2.75A2.75,2.75,0,0,1,0,14.73V6.23A2.75,2.75,0,0,1,2.75,3.48h8.5A2.75,2.75,0,0,1,14,6.23v8.5A2.75,2.75,0,0,1,11.25,17.48ZM2.75,5A1.25,1.25,0,0,0,1.5,6.23v8.5A1.25,1.25,0,0,0,2.75,16h8.5a1.25,1.25,0,0,0,1.25-1.25V6.23A1.25,1.25,0,0,0,11.25,5Z"/><path d="M19,16.1a2.1,2.1,0,0,1-.65-.1l-4-1.37A2,2,0,0,1,13,12.74V8.09a2,2,0,0,1,1.41-1.91l4-1.24A2,2,0,0,1,19,4.85a2,2,0,0,1,2,2V14.1a2,2,0,0,1-1.12,1.8A2,2,0,0,1,19,16.1Zm0-9.75a.4.4,0,0,0-.15,0l-4,1.24a.48.48,0,0,0-.35.47v4.65a.51.51,0,0,0,.34.47l4,1.37a.5.5,0,0,0,.38,0,.48.48,0,0,0,.25-.29.41.41,0,0,0,0-.16V6.85A.5.5,0,0,0,19,6.35Z"/></symbol>', '<symbol id="rub" viewBox="0 0 23 23"><path d="M20.22,15a10.53,10.53,0,1,0-4.5,5.14L15.65,20a1.4,1.4,0,0,1-.12-.18.94.94,0,0,1-.12-.18h0a1.19,1.19,0,0,1-.11-.26l-.07-.12A9.37,9.37,0,0,1,10.5,20.5a9.5,9.5,0,1,1,8.79-5.9"/><path d="M19.29,14.6a2.17,2.17,0,0,1,.59.2,1.5,1.5,0,0,1,.34.16"/><path d="M18.5,22.5A4.5,4.5,0,1,1,23,18,4.51,4.51,0,0,1,18.5,22.5Zm0-8A3.5,3.5,0,1,0,22,18,3.5,3.5,0,0,0,18.5,14.5Z"/><path d="M8.77,13.94V16H7.93V13.94H6.74v-.7H7.93V11.69H6.74V11H7.93V6.23h3.83a2.51,2.51,0,0,1,2,.73,2.85,2.85,0,0,1,.67,2,2.82,2.82,0,0,1-.67,2,2.52,2.52,0,0,1-2,.74h-3v1.55h3.69v.7Zm0-2.95h3a1.57,1.57,0,0,0,1.73-1.65v-.7a1.65,1.65,0,0,0-.44-1.19A1.68,1.68,0,0,0,11.76,7h-3Z"/><path d="M17.08,16.09,19,18l-1.91,1.91.59.59,2.5-2.5-2.5-2.5Z"/></symbol>', '<symbol id="protect" viewBox="0 0 23.14 23.14"><path d="M11.57,23.14l-1.12-.8a42,42,0,0,1-5-3.9c-2-1.93-2.92-3.73-2.92-5.65V3.35l9-3.35,9,3.35v9.44c0,1.92-.93,3.72-2.92,5.65a42.16,42.16,0,0,1-5,3.9ZM3.57,4v8.75c0,1.63.83,3.2,2.61,4.93A40.41,40.41,0,0,0,11,21.52l.54.39.54-.38A41.19,41.19,0,0,0,17,17.72c1.78-1.73,2.61-3.29,2.61-4.93V4l-8-3Z"/><polygon points="9.94 15.32 6.47 11.1 7.24 10.47 10 13.82 15.93 7.8 16.64 8.5 9.94 15.32"/></symbol>', '<symbol id="unprotect" viewBox="0 0 23.14 23.14"><path d="M11.57,23.14l-1.12-.8a42,42,0,0,1-5-3.9c-2-1.93-2.92-3.73-2.92-5.65V3.35l9-3.35,9,3.35v9.44c0,1.92-.93,3.72-2.92,5.65a42.16,42.16,0,0,1-5,3.9ZM3.57,4v8.75c0,1.63.83,3.2,2.61,4.93A40.41,40.41,0,0,0,11,21.52l.54.39.54-.38A41.19,41.19,0,0,0,17,17.72c1.78-1.73,2.61-3.29,2.61-4.93V4l-8-3Z"/><path d="M11.57,10.29l3.5-3.5.71.71L12.28,11l3.5,3.5-.71.71-3.5-3.5-3.5,3.5-.71-.71,3.5-3.5L7.36,7.5l.71-.71Z"/></symbol>', '<symbol id="instagram" viewBox="0 0 18 18"><path d="M5,0A5,5,0,0,0,0,5v8a5,5,0,0,0,5,5h8a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM15,2a1,1,0,1,1-1,1A1,1,0,0,1,15,2ZM9,4A5,5,0,1,1,4,9,5,5,0,0,1,9,4ZM9,6a3,3,0,1,0,3,3A3,3,0,0,0,9,6Z"/></symbol>', '<symbol id="vk" viewBox="0 0 18 18"><path d="M15.86,0H2.14A2.14,2.14,0,0,0,0,2.14V15.86A2.14,2.14,0,0,0,2.14,18H15.86A2.14,2.14,0,0,0,18,15.86V2.14A2.14,2.14,0,0,0,15.86,0ZM14.45,12.43H12.76a1.29,1.29,0,0,1-.7-.25c-.57-.39-1.1-1.36-1.53-1.36h-.08c-.37.12-.48.49-.48.94,0,.16-.11.23-.41.23H8.73a3.24,3.24,0,0,1-2.82-1.12A22.91,22.91,0,0,1,3,6.36.29.29,0,0,1,3,6.1.48.48,0,0,1,3.36,6H5.1a.77.77,0,0,1,.28.12.49.49,0,0,1,.15.2s.29.57.65,1.21c.62,1,1,1.4,1.18,1.4l.12,0c.35-.19.25-1.75.25-1.75a1.83,1.83,0,0,0-.18-.82A.84.84,0,0,0,7,6.06c-.1,0,.06-.23.26-.33a3.18,3.18,0,0,1,1.24-.16h.26a1.85,1.85,0,0,1,.71.11c.59.14.39.69.39,2,0,.42-.08,1,.23,1.22l.09,0c.19,0,.62-.25,1.29-1.4.38-.65.67-1.3.67-1.3a.6.6,0,0,1,.17-.17A.25.25,0,0,1,12.54,6h1.85c.29,0,.55,0,.6.18s-.21.74-1,1.73c-1.2,1.61-1.34,1.49-.34,2.43a5.11,5.11,0,0,1,1.19,1.38C15.29,12.38,14.45,12.43,14.45,12.43Z"/></symbol>', '<symbol id="youtube" viewBox="0 0 18 18"><path d="M17.5,4.64a2.38,2.38,0,0,0-1.88-1.79,37.6,37.6,0,0,0-6.68-.49,38.16,38.16,0,0,0-6.73.49A2.32,2.32,0,0,0,.33,4.64,27.65,27.65,0,0,0,0,9a23.28,23.28,0,0,0,.37,4.36,2.37,2.37,0,0,0,1.88,1.78,38.75,38.75,0,0,0,6.73.5,38.53,38.53,0,0,0,6.72-.5,2.29,2.29,0,0,0,1.88-1.78A30.67,30.67,0,0,0,18,9,29.49,29.49,0,0,0,17.5,4.64ZM6.68,11.91V6.09L11.78,9l-5.1,2.91Z"/></symbol>', '<symbol id="twitter" viewBox="0 0 510 510"><path d="M459,0H51A51.15,51.15,0,0,0,0,51V459a51.15,51.15,0,0,0,51,51H459a51.15,51.15,0,0,0,51-51V51A51.15,51.15,0,0,0,459,0ZM400.35,186.15c-2.55,117.3-76.5,198.9-188.7,204-45.9,2.55-79.05-12.75-109.65-30.6,33.15,5.1,76.5-7.65,99.45-28.05C168.3,329,147.9,311.1,137.7,283.05c10.2,2.55,20.4,0,28.05,0-30.6-10.2-51-28.05-53.55-68.85,7.65,5.1,17.85,7.65,28.05,7.65-23-12.75-38.25-61.2-20.4-91.8,33.15,35.7,74,66.3,140.25,71.4-17.85-71.4,79-109.65,117.3-61.2,17.85-2.55,30.6-10.2,43.35-15.3-5.1,17.85-15.3,28.05-28.05,38.25,12.75-2.55,25.5-5.1,35.7-10.2C425.85,165.75,413.1,176,400.35,186.15Z"/></symbol>', '<symbol id="age" viewBox="0 0 39.8 39.8"><path d="M12.09,11H9.51c-1,0-1.51.18-1.51,1v1c0,.87.51,1.05,1.51,1.05h.59c.37,0,.54.21.54.81V27.78c0,1,.17,1.59,1,1.59h1c.83,0,1-.54,1-1.59V12c0-.87-.51-1-1.51-1"/><path d="M37.18,17.67c0,.45-.21.69-.63.69h-2V17c0-1-.15-1.6-1.05-1.6h-.91c-.9,0-1.05.55-1.05,1.6v1.41H30.11c-1.06,0-1.6.15-1.6,1.06v1c0,.91.54,1.06,1.6,1.06h1.41v1.41c0,1,.15,1.6,1.05,1.6h.91c.9,0,1.05-.55,1.05-1.6V21.44h2a.57.57,0,0,1,.63.6v4.57a3.48,3.48,0,0,1-1.11,2.71L29.35,36a3.66,3.66,0,0,1-2.74,1.14H13.19A3.66,3.66,0,0,1,10.45,36L3.73,29.32a3.42,3.42,0,0,1-1.11-2.71V13.34A3.87,3.87,0,0,1,3.8,10.45l6.83-6.93a3.4,3.4,0,0,1,2.56-.9H26.62a3.39,3.39,0,0,1,2.55.9L36,10.45a4,4,0,0,1,1.17,2.89v4.33ZM31,1.78A6.1,6.1,0,0,0,26.58,0H13.22A6,6,0,0,0,8.79,1.78l-7.07,7A5.84,5.84,0,0,0,0,13V26.61a6,6,0,0,0,1.9,4.55l6.71,6.71a6.07,6.07,0,0,0,4.7,1.9H26.49a6.22,6.22,0,0,0,4.7-1.9l6.71-6.71a6.15,6.15,0,0,0,1.9-4.55V13a5.86,5.86,0,0,0-1.72-4.22Z"/><path d="M21.6,26.49c-1.89,0-2.56-.75-2.56-2.66S19.71,21,21.6,21s2.56.88,2.56,2.79-.67,2.66-2.56,2.66M21.6,13c1.62,0,2.27.6,2.27,2.63s-.65,2.64-2.27,2.64-2.27-.67-2.27-2.64S20,13,21.6,13m3.48,6.51a3.84,3.84,0,0,0,1.68-3.55v-1c-.18-3.42-1.3-4.72-5.16-4.72s-5,1.3-5.16,4.73v1a3.84,3.84,0,0,0,1.68,3.54C16.15,20.25,16,22,16,24.25c0,3.36,1.15,5,5.6,5.12,4.45-.09,5.6-1.76,5.6-5.12,0-2.27-.15-4-2.12-4.78"/></symbol>', '<symbol id="basketball" viewBox="0 0 32 32"><path d="M30.87,16a15.92,15.92,0,0,0-9.47,4l-4-4,9.89-9.9a1,1,0,1,0-1.41-1.41h0L16,14.59l-4-4a15.92,15.92,0,0,0,4-9.47A1,1,0,0,0,15,0,1,1,0,0,0,13.94,1a13.92,13.92,0,0,1-3.4,8.19L6.08,4.69a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.38l4.47,4.47A14,14,0,0,1,.94,14,1,1,0,1,0,1,16h0a15.87,15.87,0,0,0,9.46-4l4,4-9.9,9.9a1,1,0,0,0,0,1.41,1,1,0,0,0,1.42,0h0L16,17.41l4,4a15.87,15.87,0,0,0-4,9.47,1,1,0,1,0,2,.17v0a13.91,13.91,0,0,1,3.39-8.19l4.47,4.47a1,1,0,0,0,1.41-1.42l-4.46-4.46A13.93,13.93,0,0,1,31,18a1,1,0,0,0-.1-2h0"/><path d="M25.88,25.9A13.7,13.7,0,0,1,16,30a13.77,13.77,0,0,1-9.91-4.1,14,14,0,1,1,19.79,0ZM16,0A16,16,0,1,0,32,16,16,16,0,0,0,16,0Z"/></symbol>', '<symbol id="combat" viewBox="0 0 32 32"><path d="M7,14.43A4.77,4.77,0,0,1,9,14h5a2,2,0,1,1,0,4H9a1,1,0,1,0,0,2h5a4,4,0,0,0,4-4h5a7,7,0,0,0,7-7,1,1,0,0,0-1-1,1,1,0,0,0-1,1V9a5,5,0,0,1-5,5H17.42A4,4,0,0,0,14,12H9a6.9,6.9,0,0,0-2.72.56,1,1,0,0,0-.53,1.31A1,1,0,0,0,7,14.43M28,25a1,1,0,0,0-1-1H9a1,1,0,0,0-.71.3A1,1,0,0,0,8,25a1,1,0,0,0,.29.71A1,1,0,0,0,9,26H27a1,1,0,0,0,1-1"/><path d="M7.32,14.34a.94.94,0,0,0,.56-.51,1,1,0,0,0,0-.76V13H8V7a5,5,0,0,1,5-5H23V2a4.85,4.85,0,0,1,5,5V23a1,1,0,0,1-1,1,1,1,0,0,0-1,1h0v4a1,1,0,0,1-1,1H11a1,1,0,0,1-1-.92V25a1,1,0,0,0-.31-.7A1,1,0,0,0,9,24a5,5,0,0,1-1.66-9.69ZM8,26V29a3,3,0,0,0,2.93,3H25a3,3,0,0,0,3-3V25.89A2.78,2.78,0,0,0,30,23V7a6.93,6.93,0,0,0-7-7V0H13A7,7,0,0,0,6,7v5.71A7,7,0,0,0,8,26Z"/></symbol>', '<symbol id="football" viewBox="0 0 32 32"><path d="M24,27.47l-4.45-1.21L18.4,22l3.36-3.36,4.34,1.17,1.21,4.44A14.06,14.06,0,0,1,24,27.47Zm-19.16-3,2,.55.58,2.09A13.94,13.94,0,0,1,4.86,24.45ZM3.07,10.64l.57,2.06L2.13,14.21A13.71,13.71,0,0,1,3.07,10.64ZM7.7,4.74,12,5.92l1.17,4.29L9.89,13.52,5.62,12.37,4.44,8.1A14.45,14.45,0,0,1,7.7,4.74ZM27.33,7.8l-2.54-.69L24.1,4.6A14,14,0,0,1,27.33,7.8ZM24.27,9l4.49,1.22a13.9,13.9,0,0,1,1.17,4.43l-3.2,3.2-4.56-1.23L21,12.32ZM12.54,4l-2.45-.67a14.14,14.14,0,0,1,4.35-1.23Zm7,6.92L15.13,9.69,14,5.4,17.3,2.07A13.82,13.82,0,0,1,21.65,3.2l1.21,4.42Zm-2.5,9.57-4.42-1.19-1.23-4.47,3.19-3.19,4.45,1.21,1.21,4.44ZM7.35,23.05,3.35,22a13.9,13.9,0,0,1-1.29-4.86l2.86-2.86L9.53,15.5l1.16,4.21Zm11.8,5.17,2.38.64a13.63,13.63,0,0,1-4.08,1.06Zm-4.53,1.71A13.75,13.75,0,0,1,10,28.62l-1.15-4.2L12,21.19l4.4,1.19,1.22,4.5ZM28.06,19.39l1.85-1.85a13.58,13.58,0,0,1-1.19,4.28ZM16,0A16,16,0,0,0,0,16c0,.11,0,.22,0,.32l-.08.08.08.09a15.92,15.92,0,0,0,1.91,7.13v0H2A16,16,0,1,0,16,0Z"/></symbol>', '<symbol id="crown" viewBox="0 0 23 23"><path d="M2,5.45V15.53H21V5.44L18.6,7.52a3,3,0,0,1-4.23-.32A1.84,1.84,0,0,1,14.2,7L11.5,3.19,8.78,7a3,3,0,0,1-4.19.69l-.21-.17ZM1.65,2.51,5.69,6A1,1,0,0,0,7.1,5.9a.35.35,0,0,0,.05-.08L10.69.89A1,1,0,0,1,12.08.65a1,1,0,0,1,.23.24l3.52,4.93a1,1,0,0,0,1.39.24L17.29,6l4.06-3.5a1,1,0,0,1,1.41.11,1,1,0,0,1,.24.65V16.53a1,1,0,0,1-1,1H1a1,1,0,0,1-1-1V3.27a1,1,0,0,1,1-1,1,1,0,0,1,.65.25ZM1,20.53H22a1,1,0,0,1,0,2H1a1,1,0,0,1,0-2"/></symbol>', '<symbol id="forecast" viewBox="0 0 30 30"><path d="M9.72,28V26.14H20.31a2,2,0,0,0,2-2V5.86H28L28,28Zm-2-3.89h0L2,24.17,2,2l18.3,0V4.86h0l0,19.28ZM28,3.86H22.28V2a2,2,0,0,0-2-2H2A2,2,0,0,0,0,2v22.2a2,2,0,0,0,2,2H7.72V28a2,2,0,0,0,2,2H28a2,2,0,0,0,2-2V5.83a2,2,0,0,0-2-2Z"/><path d="M11.38,15.12l1.9,1L12.92,14l1.54-1.5-2.13-.31-.95-1.93-1,1.93L8.3,12.5,9.84,14l-.36,2.12,1.9-1ZM6.82,19.78l.87-5.08L4,11.1l5.1-.74,2.28-4.62,2.28,4.62,5.1.74-3.69,3.6.87,5.08-4.56-2.4Z"/></symbol>', '<symbol id="hockey" viewBox="0 0 31 31"><path d="M15.5,24C7.26,24,2,21.83,2,20.33V14.1C4.81,16,10.18,17,15.5,17S26.19,16,29,14.1v6.23C29,21.83,23.74,24,15.5,24m0-17C23.74,7,29,9.37,29,11s-5.26,4-13.5,4S2,12.63,2,11,7.26,7,15.5,7m0-2C7.8,5,0,7.06,0,11v9.33C0,24.05,7.8,26,15.5,26S31,24.05,31,20.33V11c0-3.94-7.8-6-15.5-6"/></symbol>', '<symbol id="tennis" viewBox="0 0 32 32"><path d="M18,2c0-.35,0-.69,0-1a1,1,0,0,0-2,.06v.06a13.94,13.94,0,0,1-4.07,10.8A14,14,0,0,1,1.07,16a1,1,0,0,0-.13,2c.34,0,.69,0,1,0A16,16,0,0,0,18,2M31,14c-.34,0-.68,0-1,0A16,16,0,0,0,14,30c0,.35,0,.69,0,1a1,1,0,1,0,2-.13h0A14,14,0,0,1,30.88,16,1,1,0,0,0,31,14h0"/><path d="M6.08,6.1a14,14,0,0,1,19.8,19.79A13.67,13.67,0,0,1,16,30a13.74,13.74,0,0,1-9.91-4.11,14,14,0,0,1,0-19.79ZM16,32A16,16,0,1,0,0,16,15.92,15.92,0,0,0,16,32Z"/></symbol>', '<symbol id="volleyball" viewBox="0 0 32 32"><path d="M16.34,30a13,13,0,0,0,8-13.72,7.91,7.91,0,0,1,4.41,5.59A11.26,11.26,0,0,1,28.12,23a14,14,0,0,1-11.78,7m-9.62-3.5.32,0A10.08,10.08,0,0,0,14,23.7c.13-.12.25-.26.38-.4s0,0,.05-.05A9.74,9.74,0,0,0,17,16.57,7.85,7.85,0,0,1,20.9,15.5a8.25,8.25,0,0,1,1.22.1A11.12,11.12,0,0,1,22.4,18a11,11,0,0,1-11,11q-.37,0-.75,0a13.9,13.9,0,0,1-3.92-2.45m-3-17.2A15,15,0,0,0,3.59,11a13,13,0,0,0,8,12A8.05,8.05,0,0,1,7.05,24.5a8,8,0,0,1-2.47-.42A14,14,0,0,1,2,16,13.85,13.85,0,0,1,3.72,9.28M23,3.87a13.88,13.88,0,0,1,4.94,4.84,13,13,0,0,0-15.85,0c0-.19,0-.39,0-.59a8,8,0,0,1,2.66-6C15.14,2,15.58,2,16,2a14,14,0,0,1,7,1.87m-10.42,7a11,11,0,0,1,17.28,3.25A13.1,13.1,0,0,1,30,16a13.56,13.56,0,0,1-.28,2.77,10,10,0,0,0-6.58-5l-.06,0a9.89,9.89,0,0,0-2.17-.25A9.75,9.75,0,0,0,16,14.83a7.76,7.76,0,0,1-3.41-3.94m-5.12-6a14.16,14.16,0,0,1,4.1-2.17A10.25,10.25,0,0,0,10.05,8.1a9.76,9.76,0,0,0,5,8.47,7.74,7.74,0,0,1-1.74,4.94A11,11,0,0,1,5.59,11,11.11,11.11,0,0,1,7.46,4.9m24.38,8.94s0-.06,0-.09A16,16,0,0,0,6.19,3.36l0,0A16,16,0,0,0,8,29.85,15.72,15.72,0,0,0,16,32,15.9,15.9,0,0,0,31.84,13.84"/></symbol>', '<symbol id="other" viewBox="0 0 31.8 31.8"><path d="M11,22.81a2,2,0,1,1,2.74.74A2,2,0,0,1,11,22.81Zm5.2-3a4,4,0,1,0-1.46,5.47A4,4,0,0,0,16.18,19.81Z"/><path d="M28,8.31,18,14.1a1,1,0,0,0-.48.79,1,1,0,0,0,.35.86,7.73,7.73,0,0,1,1.76,2.06A8,8,0,1,1,8.7,14.86L26,4.84ZM25.93,2.64l0,0L7.7,13.12a10,10,0,1,0,13.67,3.69A6.71,6.71,0,0,0,20,15.24l9.85-5.69a1,1,0,0,0,.48-.6.94.94,0,0,0-.08-.75L27.29,3a1,1,0,0,0-.6-.47A1.81,1.81,0,0,0,25.93,2.64ZM6.57,1.11A1,1,0,0,0,6.2,2.48l2,3.46a1,1,0,0,0,1.74-1l-2-3.46a1,1,0,0,0-1.37-.37h0m7.1-.37-1,3.86a1,1,0,0,0,1.94.52l1-3.87A1,1,0,0,0,13.67.74M1.42,7.81A1,1,0,0,0,2.13,9h0l3.86,1a1,1,0,0,0,1.22-.72,1,1,0,0,0-.7-1.21l-3.86-1a1,1,0,0,0-1.23.71h0"/></symbol>', '<symbol id="snooker" viewBox="0 0 28.15 28.15"><path d="M14,10.07a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2m-5,10a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,0,0,0-4H9a2,2,0,1,0,0,4m-5,10a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2m15-6a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2m-5,10a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2h0m10,2a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2"/></symbol>', '<symbol id="baseball" viewBox="0 0 32.04 32.04"><path d="M5.12,24.09A1,1,0,0,0,3.71,25.5h0l2.83,2.83a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.39L5.12,24.09m6.6-7.54a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41l3.78,3.78a1,1,0,0,0,1.41-1.42l-3.77-3.77"/><path d="M29.17,7.11l-.26.24L6.58,26.87a1,1,0,0,0-.34.72,1,1,0,0,0,.3.74,1,1,0,0,1,0,1.42,1,1,0,0,1-.71.29,1,1,0,0,1-.71-.29L2.29,26.92A1,1,0,0,1,2,26.21a1,1,0,0,1,.29-.71,1,1,0,0,1,1.42,0,1,1,0,0,0,1.41,0,.12.12,0,0,1,0-.05L24.69,3.14l.24-.27a3,3,0,0,1,4.24,4.24Zm1.41-5.65a5,5,0,0,0-7.07,0l0,0-.27.3h0l-19,21.68A2.88,2.88,0,0,0,3,23.21,3,3,0,0,0,.88,28.33l2.83,2.83a3,3,0,0,0,4.23,0H8A3,3,0,0,0,8.83,29a3,3,0,0,0-.28-1.23l21.68-19h0l.3-.27,0,0A5,5,0,0,0,32,5,5,5,0,0,0,30.58,1.46ZM6.16,4.31a2.06,2.06,0,0,1-2,2,2.08,2.08,0,0,1-2-2,2,2,0,1,1,4,0Zm-6,0a4.15,4.15,0,0,0,4,4,4.14,4.14,0,0,0,4-4,4,4,0,1,0-8,0Z"/></symbol>', '<symbol id="handball" viewBox="0 0 30.66 30.66"><path d="M26.26,24.36a5.78,5.78,0,0,1-2.13,3.28,5,5,0,0,1-3.43,1,5.39,5.39,0,0,1-2.2-.56L18.31,28a4.74,4.74,0,0,1-1-.69c-1-1-2.08-2.06-3.11-3.09L8.56,18.55a.76.76,0,0,1-.11-.14.28.28,0,0,1,.21-.12l1.42,1.41,1.36,1.36,2,2.05a1.61,1.61,0,0,0,2.21,0,1.56,1.56,0,0,0,0-2.22L13.81,19,9,14.16A.44.44,0,0,1,8.87,14h0c.06-.09.12-.14.21-.12.41.39.81.8,1.21,1.2l4.82,4.82a1.52,1.52,0,0,0,1.09.46h0a1.56,1.56,0,0,0,1.11-.48,1.52,1.52,0,0,0,0-2.2L9.81,10.17,9.68,10a.26.26,0,0,1,.21-.14l7.23,7.22a1.57,1.57,0,0,0,2.21-2.22L18,13.57l-5-5a.76.76,0,0,1-.11-.14h0c.09-.13.16-.16.14-.18a.27.27,0,0,0,.08.07l1.28,1.27L21.85,17a1.57,1.57,0,0,0,2.68-1.37,19.15,19.15,0,0,1-.24-3,4.83,4.83,0,0,1,.19-1.51A.48.48,0,0,1,24.6,11V11c0,.33,0,.65,0,1a30.49,30.49,0,0,0,.77,6.52,4.39,4.39,0,0,0,.21.61l.08.16c.05.13.11.26.15.39h0a7.71,7.71,0,0,1,.4,4.66M2.83,14.5a12.5,12.5,0,1,1,25,0,12.35,12.35,0,0,1-.49,3.42A28.07,28.07,0,0,1,26.65,12c0-.36,0-.72,0-1.08v-.17a2,2,0,0,0-3-1.53,2.49,2.49,0,0,0-1,1.26,6.86,6.86,0,0,0-.3,2.15,17.57,17.57,0,0,0,.11,2.11L15.81,8.15l-1.3-1.29a2,2,0,0,0-2.18-.49,2.37,2.37,0,0,0-1.08.89,2,2,0,0,0-.36.88A1.94,1.94,0,0,0,9,8.06,2.4,2.4,0,0,0,7.89,9.14a1.86,1.86,0,0,0,0,1.8,3.05,3.05,0,0,0,.5.65l.29.28a2.4,2.4,0,0,0-1.46,1A1.88,1.88,0,0,0,7,14.8a2.87,2.87,0,0,0,.55.77l.7.7a2.06,2.06,0,0,0-.74.31,2.35,2.35,0,0,0-1,1.19,1.84,1.84,0,0,0,.16,1.63,2.87,2.87,0,0,0,.44.57l3.75,3.75,1.83,1.84,1.39,1.38A12.52,12.52,0,0,1,2.83,14.5m27,0A14.5,14.5,0,1,0,15.33,29c.29,0,.57,0,.86,0a6.72,6.72,0,0,0,1.14.79l.27.13a7.45,7.45,0,0,0,3,.77H21a7,7,0,0,0,4.36-1.44,7.77,7.77,0,0,0,2.84-4.38A9,9,0,0,0,28.29,21a14.52,14.52,0,0,0,1.54-6.5"/></symbol>', '<symbol id="gamer" viewBox="0 0 33 33"><path d="M31.11,18.5a6.82,6.82,0,0,1-6.6,7h-16a6.82,6.82,0,0,1-6.6-7v-4a6.82,6.82,0,0,1,6.6-7h16a6.82,6.82,0,0,1,6.6,7Zm-6.6-13h-16A8.77,8.77,0,0,0,0,14.5v4a8.77,8.77,0,0,0,8.49,9h16a8.77,8.77,0,0,0,8.49-9v-4A8.77,8.77,0,0,0,24.51,5.5Z"/><path d="M11,15.5H9v-2a1,1,0,0,0-2,0v2H5a1,1,0,0,0,0,2H7v2a1,1,0,0,0,2,0v-2h2a1,1,0,0,0,0-2m13.5-3A1.5,1.5,0,1,0,26,14a1.5,1.5,0,0,0-1.5-1.5m2,5A1.5,1.5,0,1,0,28,19a1.5,1.5,0,0,0-1.5-1.5"/></symbol>', '<symbol id="apple" viewBox="0 0 21.5 21.5"><path d="M18.91,7.33a4.86,4.86,0,0,0-2.36,4.13,4.89,4.89,0,0,0,2.9,4.32A11.3,11.3,0,0,1,18,18.84c-.86,1.32-1.82,2.66-3.28,2.66s-1.88-.88-3.48-.88-2.2.88-3.52.88-2.48-1.41-3.39-2.72a13.45,13.45,0,0,1-2.23-7A7.46,7.46,0,0,1,3,7.92,5.32,5.32,0,0,1,7.38,5.2c1.39,0,2.64,1,3.49,1s2.34-1,4.07-1A4.75,4.75,0,0,1,18.91,7.33Zm-8.16-2.4a4.27,4.27,0,0,1,1.08-3.31A4.56,4.56,0,0,1,15.05,0a4.71,4.71,0,0,1-1.18,3.38A3.67,3.67,0,0,1,10.75,4.93Z"/></symbol>', '<symbol id="android" viewBox="0 0 21.45 21.45"><path d="M3.6,13.72a1.19,1.19,0,1,1-2.37,0V8.37a1.19,1.19,0,1,1,2.37,0v5.35Zm16.63,0a1.19,1.19,0,0,1-2.38,0V8.37a1.19,1.19,0,0,1,2.38,0v5.35ZM9.54,20.26a1.19,1.19,0,1,1-2.38,0V14.91a1.19,1.19,0,0,1,2.38,0Zm4.75,0a1.19,1.19,0,1,1-2.38,0V14.91a1.19,1.19,0,0,1,2.38,0Z"/><path d="M4.79,7.18V16.1A1.18,1.18,0,0,0,6,17.28h9.5a1.18,1.18,0,0,0,1.18-1.19V7.18Zm5.94-5.95C7.16,1.23,5,3.37,4.79,6H16.66C16.48,3.37,14.29,1.23,10.73,1.23ZM8.35,4.56A.56.56,0,0,1,7.76,4,.59.59,0,1,1,8.94,4,.59.59,0,0,1,8.35,4.56Zm4.75,0A.56.56,0,0,1,12.51,4a.59.59,0,1,1,1.18,0A.59.59,0,0,1,13.1,4.56Z"/><path d="M13.28,2.72a.85.85,0,0,1-.36-.12.6.6,0,0,1-.18-.83l1-1.49A.58.58,0,0,1,14.58.1a.58.58,0,0,1,.18.83l-1,1.49A.46.46,0,0,1,13.28,2.72ZM7.94,2.48a.53.53,0,0,1-.48-.3L6.69.93A.58.58,0,0,1,6.87.1.58.58,0,0,1,7.7.28l.77,1.25a.58.58,0,0,1-.18.83.85.85,0,0,1-.36.12Z"/></symbol>', '<symbol id="like" viewBox="0 0 17.41 17.41"><path d="M14.4,5.53H12l.58-2.32A1.87,1.87,0,0,0,11.36,1h0a1.86,1.86,0,0,0-2.15.74L8,3.53l-3,3H4.72A2,2,0,0,0,3,5.53H2a2,2,0,0,0-2,2v7a2,2,0,0,0,2,2H3a2,2,0,0,0,1.63-.85L8,16.53h5.5a3,3,0,0,0,2.95-2.47l.91-5a3,3,0,0,0-2.42-3.48A2.36,2.36,0,0,0,14.4,5.53ZM3,15.53H2a1,1,0,0,1-1-1v-7a1,1,0,0,1,1-1H3a1,1,0,0,1,1,1v7A1,1,0,0,1,3,15.53ZM16.37,8.89l-.91,5a2,2,0,0,1-2,1.64H8.12L5,14.75V7.53h.41l.3-.3,3-3,.07-.07.05-.08L10,2.27A.87.87,0,0,1,11.61,3L11,5.28l-.31,1.25h3.69a2,2,0,0,1,2,2A2.2,2.2,0,0,1,16.37,8.89Z"/></symbol>', '<symbol id="dislike" viewBox="0 0 17.41 17.41"><path d="M3,11.88H5.41L4.83,14.2a1.87,1.87,0,0,0,1.22,2.23h0a1.86,1.86,0,0,0,2.15-.74l1.21-1.81,3-3h.27a2,2,0,0,0,1.73,1h1a2,2,0,0,0,2-2v-7a2,2,0,0,0-2-2h-1a2,2,0,0,0-1.63.85L9.41.88H3.91A3,3,0,0,0,1,3.35l-.91,5a3,3,0,0,0,2.41,3.48A2.47,2.47,0,0,0,3,11.88Zm11.41-10h1a1,1,0,0,1,1,1v7a1,1,0,0,1-1,1h-1a1,1,0,0,1-1-1v-7A1,1,0,0,1,14.41,1.88ZM1,8.52l.91-5a2,2,0,0,1,2-1.64H9.28l3.13.78V9.88H12l-.29.3-3,3-.07.07-.06.08-1.2,1.81a.87.87,0,0,1-1.21.24.86.86,0,0,1-.36-.93l.58-2.32.31-1.25H3a2,2,0,0,1-2-2,2.19,2.19,0,0,1,0-.36Z"/></symbol>', '<symbol id="more" viewBox="0 0 35 35"><path d="M22.83,12.17H35V22.83H22.83V35H12.17V22.83H0V12.17H12.17V0H22.83Z"/></symbol>', '<symbol id="vk-share" viewBox="0 0 34 34"><defs><rect id="path-1" x="0" y="0" width="34" height="34" rx="4"></rect></defs><g id="блоки-в-новостях" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-12"><mask id="mask-2" fill="white"><use xlink:href="#path-1"></use></mask><use id="Mask" fill="#2A82BB" xlink:href="#path-1"></use><path d="M27.4704597,10.872391 C27.6322841,10.3592708 27.4704597,10 26.7153958,10 L24.1987733,10 C23.5515456,10 23.2640058,10.325045 23.1021813,10.6842492 C23.1021813,10.6842492 21.8258857,13.6605595 20.0102687,15.576337 C19.4170293,16.1408292 19.1653881,16.3118248 18.8418093,16.3118248 C18.6799849,16.3118248 18.446293,16.1408292 18.446293,15.6276424 L18.446293,10.872391 C18.446293,10.2566601 18.2665192,10 17.727268,10 L13.7724553,10 C13.376939,10 13.1252277,10.2908192 13.1252277,10.5474127 C13.1252277,11.1289844 14.0240966,11.2657542 14.1320029,12.8736997 L14.1320029,16.3974227 C14.1320029,17.1671363 13.9881278,17.3039727 13.6646191,17.3039727 C12.8196684,17.3039727 10.7344609,14.3276624 9.51201322,10.9066168 C9.26030189,10.273673 9.02661001,10 8.37952258,10 L5.86275986,10 C5.14373488,10 5,10.325045 5,10.6842492 C5,11.3171262 5.84481053,14.4644989 8.97276201,18.621099 C11.0579695,21.4605728 13.9881278,23 16.6486254,23 C18.2485699,23 18.446293,22.6579421 18.446293,22.0763704 L18.446293,19.921079 C18.446293,19.2368965 18.590098,19.0999933 19.1113999,19.0999933 C19.4888967,19.0999933 20.118105,19.2711223 21.6101431,20.6394872 C23.3178538,22.2645122 23.6055339,23 24.5583208,23 L27.0749433,23 C27.7940384,23 28.1535159,22.6579421 27.9378434,21.9908392 C27.7041515,21.3237364 26.8952397,20.3487347 25.816597,19.1855912 C25.2234277,18.5184216 24.3425783,17.8171596 24.0909371,17.4579555 C23.7133701,16.996074 23.8212063,16.7908526 24.0909371,16.3974227 C24.0909371,16.3803431 27.1649003,12.2749817 27.4704597,10.872391" id="Fill-6" fill="#FFFFFF" mask="url(#mask-2)"></path></g></g></symbol>', '<symbol id="fb-share" viewBox="0 0 30 30"><defs><rect id="a" width="30" height="30" rx="4"/><path id="c" d="M0 .032h29.957V30H0z"/></defs><g fill="none" fill-rule="evenodd"><mask id="b" fill="#fff"><use xlink:href="#a"/></mask><use fill="#D8D8D8" xlink:href="#a"/><g mask="url(#b)"><path fill="#FFF" d="M10.588 30h15.883V2.647H10.588z"/><path fill="#000" d="M10.588 30h15.883V1.765H10.588V30zm.06-.061H26.41V1.826H10.65V29.94z"/><mask id="d" fill="#fff"><use xlink:href="#c"/></mask><path fill="#007EC6" d="M16.012 29.98c-1.252.003-2.504.007-3.757.007-3.474.001-6.948-.019-10.422.013-1.007.01-1.835-.723-1.833-1.83.021-8.767.021-17.534 0-26.3C-.003.76.832.03 1.827.032c8.767.02 17.534.012 26.3.012 1.172 0 1.83.664 1.83 1.844v26.27c0 1.159-.665 1.83-1.814 1.83-2.373 0-4.747-.004-7.12.005-.26.001-.355-.044-.354-.336.011-3.646.01-7.293 0-10.938-.001-.28.083-.329.338-.325 1.1.014 2.202.002 3.302.01.185.001.265-.044.289-.24.164-1.341.334-2.682.517-4.022.034-.25-.058-.279-.273-.277-1.282.008-2.565-.006-3.847.012-.28.003-.33-.083-.325-.338.016-.818.006-1.636.007-2.454 0-.172 0-.344.01-.515.055-1.062.619-1.645 1.679-1.742.877-.081 1.756-.03 2.634-.035.226-.001.312-.043.309-.294a172.097 172.097 0 0 1-.002-3.484c.001-.21-.039-.293-.274-.313-1.239-.101-2.478-.171-3.721-.116-2.922.129-4.952 2.047-5.239 4.952-.131 1.33-.041 2.664-.05 3.996-.003.288-.088.344-.354.34-1.1-.014-2.202 0-3.302-.01-.212-.002-.273.058-.271.27.009 1.333.009 2.666 0 4-.001.214.066.272.275.27 1.121-.01 2.243.002 3.364-.01.228-.002.284.06.284.286-.008 3.767-.007 7.534-.007 11.301v-.001z" mask="url(#d)"/></g></g></symbol>', '<symbol id="wp-share" viewBox="0 0 30 30"><defs><rect id="a" width="30" height="30" rx="4"/><path id="c" d="M.124 11.806c0 2.075.544 4.102 1.58 5.888L.025 23.797l6.272-1.638a11.866 11.866 0 0 0 5.653 1.434h.006c6.52 0 11.828-5.284 11.83-11.778a11.679 11.679 0 0 0-3.462-8.332A11.781 11.781 0 0 0 11.955.029C5.435.029.127 5.312.124 11.806"/><linearGradient id="d" x1="50%" x2="50%" y1="100%" y2="0%"><stop offset="0%" stop-color="#00B025"/><stop offset="100%" stop-color="#00D761"/></linearGradient><path id="f" d="M0 .002h24.694v24.704H0z"/></defs><g fill="none" fill-rule="evenodd"><mask id="b" fill="#fff"><use xlink:href="#a"/></mask><use fill="#00CB4E" xlink:href="#a"/><g mask="url(#b)"><g transform="translate(2.647 3.53)"><mask id="e" fill="#fff"><use xlink:href="#c"/></mask><path fill="url(#d)" d="M.124 11.806c0 2.075.544 4.102 1.58 5.888L.025 23.797l6.272-1.638a11.866 11.866 0 0 0 5.653 1.434h.006c6.52 0 11.828-5.284 11.83-11.778a11.679 11.679 0 0 0-3.462-8.332A11.781 11.781 0 0 0 11.955.029C5.435.029.127 5.312.124 11.806" mask="url(#e)"/></g><path fill="#FFF" d="M11.973 9.772c-.23-.51-.473-.52-.692-.528-.179-.008-.384-.007-.588-.007a1.13 1.13 0 0 0-.82.382c-.281.307-1.075 1.047-1.075 2.552 0 1.505 1.101 2.96 1.255 3.164.153.204 2.125 3.392 5.247 4.619 2.596 1.019 3.124.816 3.687.765.563-.05 1.818-.74 2.074-1.454.256-.715.256-1.327.179-1.455-.077-.127-.282-.204-.589-.357s-1.818-.893-2.1-.995c-.28-.102-.486-.153-.69.153-.205.306-.794.995-.973 1.2-.18.204-.359.23-.666.076-.307-.153-1.296-.476-2.47-1.518-.914-.811-1.53-1.813-1.71-2.12-.179-.305-.019-.471.136-.624.137-.137.307-.357.46-.535.154-.18.205-.307.307-.51.103-.205.052-.384-.025-.537-.077-.153-.674-1.666-.947-2.27"/><g transform="translate(2.647 2.647)"><mask id="g" fill="#fff"><use xlink:href="#f"/></mask><path fill="#FFF" d="M12.399 22.426h-.004a10.239 10.239 0 0 1-5.202-1.418l-.373-.22-3.868 1.01 1.033-3.755-.244-.385a10.118 10.118 0 0 1-1.562-5.415C2.181 6.633 6.766 2.07 12.403 2.07c2.73.002 5.295 1.061 7.224 2.984a10.092 10.092 0 0 1 2.99 7.199c-.002 5.61-4.586 10.174-10.218 10.174m8.697-18.834a12.244 12.244 0 0 0-8.697-3.59C5.62.002.106 5.493.103 12.242c0 2.158.565 4.264 1.641 6.12L0 24.707l6.518-1.702a12.327 12.327 0 0 0 5.875 1.49h.006c6.776 0 12.292-5.492 12.295-12.242a12.142 12.142 0 0 0-3.598-8.66" mask="url(#g)"/></g></g></g></symbol>'];
+  var symbols = ['<symbol id="arrow" viewBox="0 0 12 12"><path d="M2.29,1.41,6.88,6,2.29,10.59,3.71,12l6-6-6-6Z"/></symbol>', '<symbol id="close" viewBox="0 0 12.73 12.73"><path d="M0,1.41,1.41,0,12.73,11.31l-1.42,1.42Z"/><path d="M1.41,12.73,0,11.31,11.31,0l1.42,1.41Z"/></symbol>', '<symbol id="search" viewBox="0 0 17.49 17.49"><path d="M12.5,10.91h-.79l-.28-.26A6,6,0,0,0,13,6.59,6.37,6.37,0,0,0,6.5.36,6.37,6.37,0,0,0,0,6.59a6.37,6.37,0,0,0,6.5,6.23,6.63,6.63,0,0,0,4.23-1.5l.27.27v.75l5,4.79,1.49-1.43Zm-6,0A4.41,4.41,0,0,1,2,6.59,4.41,4.41,0,0,1,6.5,2.28,4.41,4.41,0,0,1,11,6.59,4.41,4.41,0,0,1,6.5,10.91Z"/></symbol>', '<symbol id="search-o" viewBox="0 0 16.41 16.41"><path d="M13,11.09l3.4,3.41L15,15.91l-3.26-3.26A7,7,0,1,1,13,11.09ZM7,12.5a5,5,0,1,0-5-5A5,5,0,0,0,7,12.5Z"/></symbol>', '<symbol id="user" viewBox="0 0 16 18"><path d="M8 0c2.344 0 4.235 1.809 4.235 4.05 0 2.241-1.891 4.05-4.235 4.05-2.344 0-4.235-1.809-4.235-4.05C3.765 1.809 5.656 0 8 0zM8 18c-3.333 0-6.28-1.829-8-4.6C.04 10.557 5.333 9 8 9c2.653 0 7.96 1.557 8 4.4-1.72 2.771-4.667 4.6-8 4.6z"/></symbol>', '<symbol id="star" viewBox="0 0 18.33 18.33"><path d="M18.33,7.09l-6.59-.56L9.17.46,6.59,6.53,0,7.09l5,4.34L3.5,17.87l5.67-3.42,5.66,3.42-1.49-6.44Z"/></symbol>', '<symbol id="star-o" viewBox="0 0 18.33 18.33"><path d="M18.33,7.09l-6.59-.56L9.17.46,6.59,6.53,0,7.09l5,4.34L3.5,17.87l5.67-3.42,5.66,3.42-1.49-6.44ZM9.17,12.74,5.72,14.82l.92-3.92-3-2.64,4-.35L9.17,4.22l1.56,3.7,4,.35L11.7,10.91l.92,3.92Z"/></symbol>', '<symbol id="gift" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M2.712 3.4a2.444 2.444 0 0 1-.162-.877C2.55 1.13 3.718 0 5.16 0 6.091 0 7.57 1.113 8.5 2.276 9.429 1.113 10.909 0 11.84 0c1.442 0 2.61 1.13 2.61 2.523 0 .309-.057.604-.162.877H15.3A1.7 1.7 0 0 1 17 5.1v2.55a1.7 1.7 0 0 1-.864 1.48 1.7 1.7 0 0 1 .014.22v5.95a1.7 1.7 0 0 1-1.7 1.7H2.55a1.7 1.7 0 0 1-1.7-1.7V9.35a1.867 1.867 0 0 1 .014-.22A1.7 1.7 0 0 1 0 7.65V5.1a1.7 1.7 0 0 1 1.7-1.7h1.012zm7.068-.001c.225.003.473-.001.74-.01l.374-.015c.32-.013.665-.027.947-.027.556 0 .909-.422.909-.824 0-.394-.34-.808-.88-.823-.002.004-.141.032-.43.202-.323.19-.696.479-1.053.824a6.411 6.411 0 0 0-.607.673zM7.04 5.1H1.7v2.55h5.95V5.1h-.61zm2.31 0h5.95v2.55H9.35V5.1zm-1.7 4.25h-5.1v5.95h5.1V9.35zm1.7 5.95V9.35h5.1v5.95h-5.1zM6.48 3.389c.267.009.515.013.74.01a6.411 6.411 0 0 0-.607-.673 5.872 5.872 0 0 0-1.054-.824c-.24-.14-.376-.184-.416-.197L5.129 1.7c-.538.015-.879.429-.879.823 0 .402.353.824.91.824.281 0 .626.014.946.027l.374.015z"/></symbol>', '<symbol id="toggle" viewBox="0 0 16.5 16.5"><path d="M0,13.75H11V11.92H0Zm0-11V4.58H16.5V2.75ZM0,9.17H16.5V7.33H0Z"/></symbol>', '<symbol id="chat" viewBox="0 0 15 15"><path d="M13.5,0H1.5A1.5,1.5,0,0,0,0,1.5V15l3-3H13.5A1.51,1.51,0,0,0,15,10.5v-9A1.5,1.5,0,0,0,13.5,0Zm0,10.5H3L1.5,12V1.5h12Z"/></symbol>', '<symbol id="filter" viewBox="0 0 13.86 13.86"><path d="M5.52,9.44h7.84a.5.5,0,0,0,0-1H5.52A1.79,1.79,0,0,0,3.8,7.16,1.76,1.76,0,0,0,2.1,8.44H.5a.5.5,0,0,0,0,1H2.1a1.78,1.78,0,0,0,3.42,0ZM3,8.94a.78.78,0,0,1,1.56,0,.79.79,0,0,1-.78.78A.78.78,0,0,1,3,8.94Zm8.5-3.5h1.84a.5.5,0,0,0,0-1H11.52A1.79,1.79,0,0,0,9.8,3.16,1.76,1.76,0,0,0,8.1,4.44H.5a.5.5,0,0,0,0,1H8.1a1.78,1.78,0,0,0,3.42,0ZM9,4.94a.78.78,0,0,1,1.56,0,.79.79,0,0,1-.78.78A.78.78,0,0,1,9,4.94Z"/></symbol>', '<symbol id="paper" viewBox="0 0 18 22"><path d="M4.667 15.333h8.666V17.5H4.667v-2.167zm0-4.333h8.666v2.167H4.667V11zm6.5-10.833l6.5 6.5v13a2.173 2.173 0 0 1-2.167 2.166H2.49a2.164 2.164 0 0 1-2.157-2.166V2.333C.333 1.142 1.308.167 2.5.167h8.667zm4.333 19.5V7.75h-5.417V2.333H2.5v17.334h13z"/></symbol>', '<symbol id="web" viewBox="0 0 26 26"><path d="M13 2c6.072 0 11 4.928 11 11s-4.928 11-11 11S2 19.072 2 13 6.928 2 13 2zm6.49 16.929A8.753 8.753 0 0 0 21.8 13c0-3.685-2.277-6.842-5.5-8.151V5.3c0 1.21-.99 2.2-2.2 2.2h-2.2v2.2c0 .605-.495 1.1-1.1 1.1H8.6V13h6.6c.605 0 1.1.495 1.1 1.1v3.3h1.1c.99 0 1.804.638 2.09 1.529zm-7.59 2.794V19.6c-1.21 0-2.2-.99-2.2-2.2v-1.1l-5.269-5.269A8.93 8.93 0 0 0 4.2 13a8.787 8.787 0 0 0 7.7 8.723z"/></symbol>', '<symbol id="comment" viewBox="0 0 50 40"><polygon points="8.7 39.68 9.93 26.7 -2.34 22.27 13.02 14.87 18.69 1.41 26.94 9.82 42.71 5.92 32.46 18.52 36.54 29.57 21.95 28.95 8.7 39.68" fill="#fff"/><rect x="2" y="2" width="46" height="26.32" fill="#fff"/><path d="M10,37.12l12.78-8.69H45a3,3,0,0,0,3-3V5a3,3,0,0,0-3-3H5A3,3,0,0,0,2,5V25.43a3,3,0,0,0,3,3h5Zm13.4-6.69L9.56,39.83a1,1,0,0,1-1.39-.26A1.06,1.06,0,0,1,8,39V30.44H5a5,5,0,0,1-5-5V5A5,5,0,0,1,5,0H45a5,5,0,0,1,5,5V25.43a5,5,0,0,1-5,5Z"/></symbol>', '<symbol id="comment-b" viewBox="0 0 18 14.36"><path d="M2.93,14.36V10.67H2a2,2,0,0,1-2-2V2A2,2,0,0,1,2,0H16a2,2,0,0,1,2,2V8.67a2,2,0,0,1-2,2H8.58ZM2,1.5a.5.5,0,0,0-.5.5V8.67a.5.5,0,0,0,.5.5H4.43v2.42l3.7-2.42H16a.5.5,0,0,0,.5-.5V2a.5.5,0,0,0-.5-.5Z"/></symbol>', '<symbol id="comment-bold" viewBox="0 0 44 30"><path d="M20.28,20.8H39a3,3,0,0,0,3-3V5a3,3,0,0,0-3-3H5A3,3,0,0,0,2,5V17.8a3,3,0,0,0,3,3H9v6.47Zm.54,2L8.5,29.87a1,1,0,0,1-1.37-.37A1.06,1.06,0,0,1,7,29V22.8H5a5,5,0,0,1-5-5V5A5,5,0,0,1,5,0H39a5,5,0,0,1,5,5V17.8a5,5,0,0,1-5,5Z"/></symbol>', '<symbol id="line" viewBox="0 0 231 28"><path d="M13 0h218l-.307.098A18.921 18.921 0 0 0 218 14v-1c0 8.284-6.716 15-15 15H28c-8.284 0-15-6.716-15-15v1l-.46-1.668A17.572 17.572 0 0 0 0 0h13z"/></symbol>', '<symbol id="line-short" viewBox="0 0 189 32"><path d="M15 0h174c-3.578.95-6.617 2.798-9.117 5.545-2.5 2.748-4.461 6.394-5.883 10.94V16c0 8.837-7.163 16-16 16H30c-8.284 0-15-6.716-15-15v.515c-.864-4.178-2.546-7.727-5.046-10.646C7.454 3.949 4.136 1.66 0 0h15z"></path></symbol>', '<symbol id="dollar" viewBox="0 0 19.33 19.33"><path d="M12.82,16a7.82,7.82,0,1,1,3.85-6.73A7.63,7.63,0,0,1,16,12.31a1.87,1.87,0,0,1,.34.08,1.66,1.66,0,0,1,.59.26,8.59,8.59,0,0,0,.72-3.4,8.85,8.85,0,1,0-4.35,7.6,1.78,1.78,0,0,1-.25-.36A2,2,0,0,1,12.82,16Z"/><path d="M15.5,11.25a3.83,3.83,0,1,0,3.83,3.83A3.84,3.84,0,0,0,15.5,11.25Zm0,6.66a2.83,2.83,0,0,1-2.63-1.78.08.08,0,0,1,0,0c0-.06,0-.13-.08-.2h0a3,3,0,0,1-.11-.8,2.83,2.83,0,0,1,2.83-2.83,2.77,2.77,0,0,1,1,.17,1.66,1.66,0,0,1,.55.27,2.83,2.83,0,0,1-1.51,5.22Z"/><polygon points="14.31 13.49 15.9 15.08 14.31 16.67 14.8 17.16 16.89 15.08 14.8 13 14.31 13.49"/><path d="M8.54,14V13a3.25,3.25,0,0,1-1.41-.41,4,4,0,0,1-1-.84l.8-.72a3.12,3.12,0,0,0,.75.67,2.24,2.24,0,0,0,.92.32V9.59A3.41,3.41,0,0,1,6.9,8.83a1.8,1.8,0,0,1-.53-1.35A1.79,1.79,0,0,1,7,6.09a2.74,2.74,0,0,1,1.59-.63v-1h.93v1a3.11,3.11,0,0,1,1.23.35,2.93,2.93,0,0,1,.91.78l-.82.67a2.1,2.1,0,0,0-1.38-.82V8.69h0a8.28,8.28,0,0,1,1,.34,2.47,2.47,0,0,1,.7.44,1.39,1.39,0,0,1,.39.57,2.19,2.19,0,0,1,.12.75,2.07,2.07,0,0,1-.57,1.49A2.69,2.69,0,0,1,9.47,13v1Zm2-3.1a1,1,0,0,0-.24-.69,1.79,1.79,0,0,0-.89-.43v2.29a1.42,1.42,0,0,0,.83-.4A1,1,0,0,0,10.54,10.88Zm-3-3.45a.88.88,0,0,0,.27.7,2.38,2.38,0,0,0,.83.39V6.43a1.51,1.51,0,0,0-.81.33A.86.86,0,0,0,7.51,7.43Z"/></symbol>', '<symbol id="instagram" viewBox="0 0 18 18"><path d="M5,0A5,5,0,0,0,0,5v8a5,5,0,0,0,5,5h8a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM15,2a1,1,0,1,1-1,1A1,1,0,0,1,15,2ZM9,4A5,5,0,1,1,4,9,5,5,0,0,1,9,4ZM9,6a3,3,0,1,0,3,3A3,3,0,0,0,9,6Z"/></symbol>', '<symbol id="vk" viewBox="0 0 18 18"><path d="M15.86,0H2.14A2.14,2.14,0,0,0,0,2.14V15.86A2.14,2.14,0,0,0,2.14,18H15.86A2.14,2.14,0,0,0,18,15.86V2.14A2.14,2.14,0,0,0,15.86,0ZM14.45,12.43H12.76a1.29,1.29,0,0,1-.7-.25c-.57-.39-1.1-1.36-1.53-1.36h-.08c-.37.12-.48.49-.48.94,0,.16-.11.23-.41.23H8.73a3.24,3.24,0,0,1-2.82-1.12A22.91,22.91,0,0,1,3,6.36.29.29,0,0,1,3,6.1.48.48,0,0,1,3.36,6H5.1a.77.77,0,0,1,.28.12.49.49,0,0,1,.15.2s.29.57.65,1.21c.62,1,1,1.4,1.18,1.4l.12,0c.35-.19.25-1.75.25-1.75a1.83,1.83,0,0,0-.18-.82A.84.84,0,0,0,7,6.06c-.1,0,.06-.23.26-.33a3.18,3.18,0,0,1,1.24-.16h.26a1.85,1.85,0,0,1,.71.11c.59.14.39.69.39,2,0,.42-.08,1,.23,1.22l.09,0c.19,0,.62-.25,1.29-1.4.38-.65.67-1.3.67-1.3a.6.6,0,0,1,.17-.17A.25.25,0,0,1,12.54,6h1.85c.29,0,.55,0,.6.18s-.21.74-1,1.73c-1.2,1.61-1.34,1.49-.34,2.43a5.11,5.11,0,0,1,1.19,1.38C15.29,12.38,14.45,12.43,14.45,12.43Z"/></symbol>', '<symbol id="youtube" viewBox="0 0 18 18"><path d="M17.5,4.64a2.38,2.38,0,0,0-1.88-1.79,37.6,37.6,0,0,0-6.68-.49,38.16,38.16,0,0,0-6.73.49A2.32,2.32,0,0,0,.33,4.64,27.65,27.65,0,0,0,0,9a23.28,23.28,0,0,0,.37,4.36,2.37,2.37,0,0,0,1.88,1.78,38.75,38.75,0,0,0,6.73.5,38.53,38.53,0,0,0,6.72-.5,2.29,2.29,0,0,0,1.88-1.78A30.67,30.67,0,0,0,18,9,29.49,29.49,0,0,0,17.5,4.64ZM6.68,11.91V6.09L11.78,9l-5.1,2.91Z"/></symbol>', '<symbol id="twitter" viewBox="0 0 510 510"><path d="M459,0H51A51.15,51.15,0,0,0,0,51V459a51.15,51.15,0,0,0,51,51H459a51.15,51.15,0,0,0,51-51V51A51.15,51.15,0,0,0,459,0ZM400.35,186.15c-2.55,117.3-76.5,198.9-188.7,204-45.9,2.55-79.05-12.75-109.65-30.6,33.15,5.1,76.5-7.65,99.45-28.05C168.3,329,147.9,311.1,137.7,283.05c10.2,2.55,20.4,0,28.05,0-30.6-10.2-51-28.05-53.55-68.85,7.65,5.1,17.85,7.65,28.05,7.65-23-12.75-38.25-61.2-20.4-91.8,33.15,35.7,74,66.3,140.25,71.4-17.85-71.4,79-109.65,117.3-61.2,17.85-2.55,30.6-10.2,43.35-15.3-5.1,17.85-15.3,28.05-28.05,38.25,12.75-2.55,25.5-5.1,35.7-10.2C425.85,165.75,413.1,176,400.35,186.15Z"/></symbol>', '<symbol id="basketball" viewBox="0 0 32 32"><path d="M30.87,16a15.92,15.92,0,0,0-9.47,4l-4-4,9.89-9.9a1,1,0,1,0-1.41-1.41h0L16,14.59l-4-4a15.92,15.92,0,0,0,4-9.47A1,1,0,0,0,15,0,1,1,0,0,0,13.94,1a13.92,13.92,0,0,1-3.4,8.19L6.08,4.69a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.38l4.47,4.47A14,14,0,0,1,.94,14,1,1,0,1,0,1,16h0a15.87,15.87,0,0,0,9.46-4l4,4-9.9,9.9a1,1,0,0,0,0,1.41,1,1,0,0,0,1.42,0h0L16,17.41l4,4a15.87,15.87,0,0,0-4,9.47,1,1,0,1,0,2,.17v0a13.91,13.91,0,0,1,3.39-8.19l4.47,4.47a1,1,0,0,0,1.41-1.42l-4.46-4.46A13.93,13.93,0,0,1,31,18a1,1,0,0,0-.1-2h0"/><path d="M25.88,25.9A13.7,13.7,0,0,1,16,30a13.77,13.77,0,0,1-9.91-4.1,14,14,0,1,1,19.79,0ZM16,0A16,16,0,1,0,32,16,16,16,0,0,0,16,0Z"/></symbol>', '<symbol id="combat" viewBox="0 0 32 32"><path d="M7,14.43A4.77,4.77,0,0,1,9,14h5a2,2,0,1,1,0,4H9a1,1,0,1,0,0,2h5a4,4,0,0,0,4-4h5a7,7,0,0,0,7-7,1,1,0,0,0-1-1,1,1,0,0,0-1,1V9a5,5,0,0,1-5,5H17.42A4,4,0,0,0,14,12H9a6.9,6.9,0,0,0-2.72.56,1,1,0,0,0-.53,1.31A1,1,0,0,0,7,14.43M28,25a1,1,0,0,0-1-1H9a1,1,0,0,0-.71.3A1,1,0,0,0,8,25a1,1,0,0,0,.29.71A1,1,0,0,0,9,26H27a1,1,0,0,0,1-1"/><path d="M7.32,14.34a.94.94,0,0,0,.56-.51,1,1,0,0,0,0-.76V13H8V7a5,5,0,0,1,5-5H23V2a4.85,4.85,0,0,1,5,5V23a1,1,0,0,1-1,1,1,1,0,0,0-1,1h0v4a1,1,0,0,1-1,1H11a1,1,0,0,1-1-.92V25a1,1,0,0,0-.31-.7A1,1,0,0,0,9,24a5,5,0,0,1-1.66-9.69ZM8,26V29a3,3,0,0,0,2.93,3H25a3,3,0,0,0,3-3V25.89A2.78,2.78,0,0,0,30,23V7a6.93,6.93,0,0,0-7-7V0H13A7,7,0,0,0,6,7v5.71A7,7,0,0,0,8,26Z"/></symbol>', '<symbol id="football" viewBox="0 0 32 32"><path d="M24,27.47l-4.45-1.21L18.4,22l3.36-3.36,4.34,1.17,1.21,4.44A14.06,14.06,0,0,1,24,27.47Zm-19.16-3,2,.55.58,2.09A13.94,13.94,0,0,1,4.86,24.45ZM3.07,10.64l.57,2.06L2.13,14.21A13.71,13.71,0,0,1,3.07,10.64ZM7.7,4.74,12,5.92l1.17,4.29L9.89,13.52,5.62,12.37,4.44,8.1A14.45,14.45,0,0,1,7.7,4.74ZM27.33,7.8l-2.54-.69L24.1,4.6A14,14,0,0,1,27.33,7.8ZM24.27,9l4.49,1.22a13.9,13.9,0,0,1,1.17,4.43l-3.2,3.2-4.56-1.23L21,12.32ZM12.54,4l-2.45-.67a14.14,14.14,0,0,1,4.35-1.23Zm7,6.92L15.13,9.69,14,5.4,17.3,2.07A13.82,13.82,0,0,1,21.65,3.2l1.21,4.42Zm-2.5,9.57-4.42-1.19-1.23-4.47,3.19-3.19,4.45,1.21,1.21,4.44ZM7.35,23.05,3.35,22a13.9,13.9,0,0,1-1.29-4.86l2.86-2.86L9.53,15.5l1.16,4.21Zm11.8,5.17,2.38.64a13.63,13.63,0,0,1-4.08,1.06Zm-4.53,1.71A13.75,13.75,0,0,1,10,28.62l-1.15-4.2L12,21.19l4.4,1.19,1.22,4.5ZM28.06,19.39l1.85-1.85a13.58,13.58,0,0,1-1.19,4.28ZM16,0A16,16,0,0,0,0,16c0,.11,0,.22,0,.32l-.08.08.08.09a15.92,15.92,0,0,0,1.91,7.13v0H2A16,16,0,1,0,16,0Z"/></symbol>', '<symbol id="hockey" viewBox="0 0 31 31"><path d="M15.5,24C7.26,24,2,21.83,2,20.33V14.1C4.81,16,10.18,17,15.5,17S26.19,16,29,14.1v6.23C29,21.83,23.74,24,15.5,24m0-17C23.74,7,29,9.37,29,11s-5.26,4-13.5,4S2,12.63,2,11,7.26,7,15.5,7m0-2C7.8,5,0,7.06,0,11v9.33C0,24.05,7.8,26,15.5,26S31,24.05,31,20.33V11c0-3.94-7.8-6-15.5-6"/></symbol>', '<symbol id="tennis" viewBox="0 0 32 32"><path d="M18,2c0-.35,0-.69,0-1a1,1,0,0,0-2,.06v.06a13.94,13.94,0,0,1-4.07,10.8A14,14,0,0,1,1.07,16a1,1,0,0,0-.13,2c.34,0,.69,0,1,0A16,16,0,0,0,18,2M31,14c-.34,0-.68,0-1,0A16,16,0,0,0,14,30c0,.35,0,.69,0,1a1,1,0,1,0,2-.13h0A14,14,0,0,1,30.88,16,1,1,0,0,0,31,14h0"/><path d="M6.08,6.1a14,14,0,0,1,19.8,19.79A13.67,13.67,0,0,1,16,30a13.74,13.74,0,0,1-9.91-4.11,14,14,0,0,1,0-19.79ZM16,32A16,16,0,1,0,0,16,15.92,15.92,0,0,0,16,32Z"/></symbol>', '<symbol id="volleyball" viewBox="0 0 32 32"><path d="M16.34,30a13,13,0,0,0,8-13.72,7.91,7.91,0,0,1,4.41,5.59A11.26,11.26,0,0,1,28.12,23a14,14,0,0,1-11.78,7m-9.62-3.5.32,0A10.08,10.08,0,0,0,14,23.7c.13-.12.25-.26.38-.4s0,0,.05-.05A9.74,9.74,0,0,0,17,16.57,7.85,7.85,0,0,1,20.9,15.5a8.25,8.25,0,0,1,1.22.1A11.12,11.12,0,0,1,22.4,18a11,11,0,0,1-11,11q-.37,0-.75,0a13.9,13.9,0,0,1-3.92-2.45m-3-17.2A15,15,0,0,0,3.59,11a13,13,0,0,0,8,12A8.05,8.05,0,0,1,7.05,24.5a8,8,0,0,1-2.47-.42A14,14,0,0,1,2,16,13.85,13.85,0,0,1,3.72,9.28M23,3.87a13.88,13.88,0,0,1,4.94,4.84,13,13,0,0,0-15.85,0c0-.19,0-.39,0-.59a8,8,0,0,1,2.66-6C15.14,2,15.58,2,16,2a14,14,0,0,1,7,1.87m-10.42,7a11,11,0,0,1,17.28,3.25A13.1,13.1,0,0,1,30,16a13.56,13.56,0,0,1-.28,2.77,10,10,0,0,0-6.58-5l-.06,0a9.89,9.89,0,0,0-2.17-.25A9.75,9.75,0,0,0,16,14.83a7.76,7.76,0,0,1-3.41-3.94m-5.12-6a14.16,14.16,0,0,1,4.1-2.17A10.25,10.25,0,0,0,10.05,8.1a9.76,9.76,0,0,0,5,8.47,7.74,7.74,0,0,1-1.74,4.94A11,11,0,0,1,5.59,11,11.11,11.11,0,0,1,7.46,4.9m24.38,8.94s0-.06,0-.09A16,16,0,0,0,6.19,3.36l0,0A16,16,0,0,0,8,29.85,15.72,15.72,0,0,0,16,32,15.9,15.9,0,0,0,31.84,13.84"/></symbol>', '<symbol id="whistle" viewBox="0 0 31.8 31.8"><path d="M11,22.81a2,2,0,1,1,2.74.74A2,2,0,0,1,11,22.81Zm5.2-3a4,4,0,1,0-1.46,5.47A4,4,0,0,0,16.18,19.81Z"/><path d="M28,8.31,18,14.1a1,1,0,0,0-.48.79,1,1,0,0,0,.35.86,7.73,7.73,0,0,1,1.76,2.06A8,8,0,1,1,8.7,14.86L26,4.84ZM25.93,2.64l0,0L7.7,13.12a10,10,0,1,0,13.67,3.69A6.71,6.71,0,0,0,20,15.24l9.85-5.69a1,1,0,0,0,.48-.6.94.94,0,0,0-.08-.75L27.29,3a1,1,0,0,0-.6-.47A1.81,1.81,0,0,0,25.93,2.64ZM6.57,1.11A1,1,0,0,0,6.2,2.48l2,3.46a1,1,0,0,0,1.74-1l-2-3.46a1,1,0,0,0-1.37-.37h0m7.1-.37-1,3.86a1,1,0,0,0,1.94.52l1-3.87A1,1,0,0,0,13.67.74M1.42,7.81A1,1,0,0,0,2.13,9h0l3.86,1a1,1,0,0,0,1.22-.72,1,1,0,0,0-.7-1.21l-3.86-1a1,1,0,0,0-1.23.71h0"/></symbol>', '<symbol id="snooker" viewBox="0 0 28.15 28.15"><path d="M14,10.07a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2m-5,10a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,0,0,0-4H9a2,2,0,1,0,0,4m-5,10a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2m15-6a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2m-5,10a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2h0m10,2a4,4,0,1,1,4-4,4,4,0,0,1-4,4m0-2a2,2,0,1,0-2-2,2,2,0,0,0,2,2"/></symbol>', '<symbol id="baseball" viewBox="0 0 32.04 32.04"><path d="M5.12,24.09A1,1,0,0,0,3.71,25.5h0l2.83,2.83a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.39L5.12,24.09m6.6-7.54a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41l3.78,3.78a1,1,0,0,0,1.41-1.42l-3.77-3.77"/><path d="M29.17,7.11l-.26.24L6.58,26.87a1,1,0,0,0-.34.72,1,1,0,0,0,.3.74,1,1,0,0,1,0,1.42,1,1,0,0,1-.71.29,1,1,0,0,1-.71-.29L2.29,26.92A1,1,0,0,1,2,26.21a1,1,0,0,1,.29-.71,1,1,0,0,1,1.42,0,1,1,0,0,0,1.41,0,.12.12,0,0,1,0-.05L24.69,3.14l.24-.27a3,3,0,0,1,4.24,4.24Zm1.41-5.65a5,5,0,0,0-7.07,0l0,0-.27.3h0l-19,21.68A2.88,2.88,0,0,0,3,23.21,3,3,0,0,0,.88,28.33l2.83,2.83a3,3,0,0,0,4.23,0H8A3,3,0,0,0,8.83,29a3,3,0,0,0-.28-1.23l21.68-19h0l.3-.27,0,0A5,5,0,0,0,32,5,5,5,0,0,0,30.58,1.46ZM6.16,4.31a2.06,2.06,0,0,1-2,2,2.08,2.08,0,0,1-2-2,2,2,0,1,1,4,0Zm-6,0a4.15,4.15,0,0,0,4,4,4.14,4.14,0,0,0,4-4,4,4,0,1,0-8,0Z"/></symbol>', '<symbol id="handball" viewBox="0 0 30.66 30.66"><path d="M26.26,24.36a5.78,5.78,0,0,1-2.13,3.28,5,5,0,0,1-3.43,1,5.39,5.39,0,0,1-2.2-.56L18.31,28a4.74,4.74,0,0,1-1-.69c-1-1-2.08-2.06-3.11-3.09L8.56,18.55a.76.76,0,0,1-.11-.14.28.28,0,0,1,.21-.12l1.42,1.41,1.36,1.36,2,2.05a1.61,1.61,0,0,0,2.21,0,1.56,1.56,0,0,0,0-2.22L13.81,19,9,14.16A.44.44,0,0,1,8.87,14h0c.06-.09.12-.14.21-.12.41.39.81.8,1.21,1.2l4.82,4.82a1.52,1.52,0,0,0,1.09.46h0a1.56,1.56,0,0,0,1.11-.48,1.52,1.52,0,0,0,0-2.2L9.81,10.17,9.68,10a.26.26,0,0,1,.21-.14l7.23,7.22a1.57,1.57,0,0,0,2.21-2.22L18,13.57l-5-5a.76.76,0,0,1-.11-.14h0c.09-.13.16-.16.14-.18a.27.27,0,0,0,.08.07l1.28,1.27L21.85,17a1.57,1.57,0,0,0,2.68-1.37,19.15,19.15,0,0,1-.24-3,4.83,4.83,0,0,1,.19-1.51A.48.48,0,0,1,24.6,11V11c0,.33,0,.65,0,1a30.49,30.49,0,0,0,.77,6.52,4.39,4.39,0,0,0,.21.61l.08.16c.05.13.11.26.15.39h0a7.71,7.71,0,0,1,.4,4.66M2.83,14.5a12.5,12.5,0,1,1,25,0,12.35,12.35,0,0,1-.49,3.42A28.07,28.07,0,0,1,26.65,12c0-.36,0-.72,0-1.08v-.17a2,2,0,0,0-3-1.53,2.49,2.49,0,0,0-1,1.26,6.86,6.86,0,0,0-.3,2.15,17.57,17.57,0,0,0,.11,2.11L15.81,8.15l-1.3-1.29a2,2,0,0,0-2.18-.49,2.37,2.37,0,0,0-1.08.89,2,2,0,0,0-.36.88A1.94,1.94,0,0,0,9,8.06,2.4,2.4,0,0,0,7.89,9.14a1.86,1.86,0,0,0,0,1.8,3.05,3.05,0,0,0,.5.65l.29.28a2.4,2.4,0,0,0-1.46,1A1.88,1.88,0,0,0,7,14.8a2.87,2.87,0,0,0,.55.77l.7.7a2.06,2.06,0,0,0-.74.31,2.35,2.35,0,0,0-1,1.19,1.84,1.84,0,0,0,.16,1.63,2.87,2.87,0,0,0,.44.57l3.75,3.75,1.83,1.84,1.39,1.38A12.52,12.52,0,0,1,2.83,14.5m27,0A14.5,14.5,0,1,0,15.33,29c.29,0,.57,0,.86,0a6.72,6.72,0,0,0,1.14.79l.27.13a7.45,7.45,0,0,0,3,.77H21a7,7,0,0,0,4.36-1.44,7.77,7.77,0,0,0,2.84-4.38A9,9,0,0,0,28.29,21a14.52,14.52,0,0,0,1.54-6.5"/></symbol>', '<symbol id="gamer" viewBox="0 0 33 33"><path d="M31.11,18.5a6.82,6.82,0,0,1-6.6,7h-16a6.82,6.82,0,0,1-6.6-7v-4a6.82,6.82,0,0,1,6.6-7h16a6.82,6.82,0,0,1,6.6,7Zm-6.6-13h-16A8.77,8.77,0,0,0,0,14.5v4a8.77,8.77,0,0,0,8.49,9h16a8.77,8.77,0,0,0,8.49-9v-4A8.77,8.77,0,0,0,24.51,5.5Z"/><path d="M11,15.5H9v-2a1,1,0,0,0-2,0v2H5a1,1,0,0,0,0,2H7v2a1,1,0,0,0,2,0v-2h2a1,1,0,0,0,0-2m13.5-3A1.5,1.5,0,1,0,26,14a1.5,1.5,0,0,0-1.5-1.5m2,5A1.5,1.5,0,1,0,28,19a1.5,1.5,0,0,0-1.5-1.5"/></symbol>', '<symbol id="like" viewBox="0 0 17.41 17.41"><path d="M14.4,5.53H12l.58-2.32A1.87,1.87,0,0,0,11.36,1h0a1.86,1.86,0,0,0-2.15.74L8,3.53l-3,3H4.72A2,2,0,0,0,3,5.53H2a2,2,0,0,0-2,2v7a2,2,0,0,0,2,2H3a2,2,0,0,0,1.63-.85L8,16.53h5.5a3,3,0,0,0,2.95-2.47l.91-5a3,3,0,0,0-2.42-3.48A2.36,2.36,0,0,0,14.4,5.53ZM3,15.53H2a1,1,0,0,1-1-1v-7a1,1,0,0,1,1-1H3a1,1,0,0,1,1,1v7A1,1,0,0,1,3,15.53ZM16.37,8.89l-.91,5a2,2,0,0,1-2,1.64H8.12L5,14.75V7.53h.41l.3-.3,3-3,.07-.07.05-.08L10,2.27A.87.87,0,0,1,11.61,3L11,5.28l-.31,1.25h3.69a2,2,0,0,1,2,2A2.2,2.2,0,0,1,16.37,8.89Z"/></symbol>', '<symbol id="dislike" viewBox="0 0 17.41 17.41"><path d="M3,11.88H5.41L4.83,14.2a1.87,1.87,0,0,0,1.22,2.23h0a1.86,1.86,0,0,0,2.15-.74l1.21-1.81,3-3h.27a2,2,0,0,0,1.73,1h1a2,2,0,0,0,2-2v-7a2,2,0,0,0-2-2h-1a2,2,0,0,0-1.63.85L9.41.88H3.91A3,3,0,0,0,1,3.35l-.91,5a3,3,0,0,0,2.41,3.48A2.47,2.47,0,0,0,3,11.88Zm11.41-10h1a1,1,0,0,1,1,1v7a1,1,0,0,1-1,1h-1a1,1,0,0,1-1-1v-7A1,1,0,0,1,14.41,1.88ZM1,8.52l.91-5a2,2,0,0,1,2-1.64H9.28l3.13.78V9.88H12l-.29.3-3,3-.07.07-.06.08-1.2,1.81a.87.87,0,0,1-1.21.24.86.86,0,0,1-.36-.93l.58-2.32.31-1.25H3a2,2,0,0,1-2-2,2.19,2.19,0,0,1,0-.36Z"/></symbol>', '<symbol id="plus" viewBox="0 0 14 14"><rect y="6" width="14" height="2"/><polygon points="8 0 8 14 6 14 6 0 8 0"/></symbol>', '<symbol id="minus" viewBox="0 0 14 2"><rect width="14" height="2"/></symbol>'];
   $(document.body).append('<svg class="hidden">' + symbols.join('') + '</svg>');
 });
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))

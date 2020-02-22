@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 26">
+    <defs>
+        <linearGradient id="a" x1="-263.77" y1="361.8" x2="-264.08" y2="362.29" gradientTransform="matrix(10.25, 0, 0, -8.04, 2723.59, 2924.38)" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#fcd08f"/>
+            <stop offset="1" stop-color="#f79673"/>
+        </linearGradient>
+        <linearGradient id="b" x1="-274.61" y1="380.2" x2="-275.34" y2="379.58" gradientTransform="matrix(16.67, 0, 0, -12.91, 4591.41, 4924.06)" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#e74047"/>
+            <stop offset="1" stop-color="#7f50a0"/>
+        </linearGradient>
+        <linearGradient id="c" x1="-274.61" y1="379.47" x2="-275.36" y2="380.08" gradientTransform="matrix(16.67, 0, 0, -12.85, 4592.97, 4884.75)" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#e6ffab"/>
+            <stop offset="1" stop-color="#47bebc"/>
+        </linearGradient>
+        <linearGradient id="d" x1="-271.05" y1="394.15" x2="-271.05" y2="395.15" gradientTransform="matrix(13.66, 0, 0, -25.72, 3708.9, 10162.18)" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#84e9db"/>
+            <stop offset="1" stop-color="#197491"/>
+        </linearGradient>
+    </defs>
+    <path d="M17.63,16.85l5.54-3.05c.63-.35,1.28-1.23,0-1.94l-5.54-3-4,4Z" fill-rule="evenodd" fill="url(#a)"/>
+    <path d="M13.66,12.85,1,25.75a1.75,1.75,0,0,0,1-.26l15.64-8.64Z" fill-rule="evenodd" fill="url(#b)"/>
+    <path d="M13.66,12.85l4-4L2,.21A1.5,1.5,0,0,0,1,0Z" fill-rule="evenodd" fill="url(#c)"/>
+    <path d="M13.66,12.85,1,0C.43.15,0,.61,0,1.53V24.21c0,.87.34,1.48,1,1.54Z" fill-rule="evenodd" fill="url(#d)"/>
+</svg>
