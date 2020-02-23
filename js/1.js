@@ -56,6 +56,8 @@ function init() {
       sentimentFull = '.js-sentiment-full',
       sentimentPagination = $('.js-pagination-sentiment'),
       sentimentPaginationBtn = '.js-more-sentiment',
+      sentimentSources = $('.js-sources-sentiment'),
+      sentimentSourcesItem = $('.js-sources-item'),
       reviewList = $('.js-review-list'),
       reviewBody = $('.js-review-body'),
       reviewText = $('.js-review-text'),
@@ -82,6 +84,7 @@ function init() {
 
   var params = $('.sentiment-graph').data('settings');
   params = $.extend({}, {
+    action: 'load-comments',
     drilldown: [],
     series: [],
     ajaxPath: '',
@@ -89,6 +92,7 @@ function init() {
     tagId: 0,
     slider: false,
     count: 10,
+    sources: 0,
     paginationTemplate: ''
   }, params);
   var sentimentChart = highcharts__WEBPACK_IMPORTED_MODULE_0___default.a.chart(sentiment, {
@@ -169,7 +173,6 @@ function init() {
                 if (data.y >= 0) {
                   positiveArray.push(data.z);
                   sumPositive = parseInt(eval(positiveArray.join('+')));
-                  console.log(positiveArray, sumPositive);
                   sentimentTotalSuccess.html('');
                   $($.parseHTML('' + sumPositive + '')).prependTo(sentimentTotalSuccess);
                   $(parseDrillDown).appendTo(sentimentScrollSuccess);
@@ -478,7 +481,8 @@ function init() {
   function addComments(comments) {
     reviewList.html('');
     $(comments).each(function (i, comment) {
-      $($.parseHTML(' <div class="sentiment-review-box">\n' + '<div class="sentiment-review-box-head">\n' + '<div class="sentiment-review-box-user">\n' + '<div class="sentiment-review-box-img">\n' + '<img src="/local/templates/main/img/icons/user.svg" alt="User" />\n' + '</div>\n' + '<div class="sentiment-review-box-trusted">\n' + '<div class="sentiment-review-box-feedback">Positive feedback</div>\n' + '<div class="sentiment-review-box-check">trusted<img src="img/icons/check.svg" alt=""></div>\n' + '</div>\n' + '<div class="sentiment-review-box-info">\n' + '<div class="sentiment-review-box-name">' + comment.author + '</div>\n' + (comment.source.name ? '<span class="sentiment-review-box-link">' + comment.source.name + '</span>' : ' ') + '\n' + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-date">' + comment.date + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-body js-review-body">\n' + '<div class="sentiment-review-box-text js-review-text">' + comment.text + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-button">\n' + '<div class="sentiment-review-box-full js-review-full">Full review</div>\n' + '<div class="sentiment-review-box-favorite">\n' + '<button class="sentiment-review-box-like" type="button">\n' + '30<svg><use xlink:href="#like"></use></svg>\n' + '</button>\n' + '<button class="sentiment-review-box-dislike" type="button">\n' + '<svg><use xlink:href="#dislike"></use></svg>12\n' + '</button>\n' + '</div>\n' + '</div>\n' + '</div>')).appendTo(reviewList);
+      console.log(comment);
+      $($.parseHTML(' <div class="sentiment-review-box ' + comment.classAppend + '">\n' + '<div class="sentiment-review-box-head">\n' + '<div class="sentiment-review-box-user">\n' + '<div class="sentiment-review-box-img">\n' + '<img src="/local/templates/main/img/icons/user.svg" alt="User" />\n' + '</div>\n' + '<div class="sentiment-review-box-trusted">\n' + '<div class="sentiment-review-box-feedback">' + (comment.classAppend === 'is-success' ? 'Positive feedback' : 'Negative feedback') + '</div>\n' + '<div class="sentiment-review-box-check">trusted<img src="/local/templates/main/img/icons/check.svg" alt=""></div>\n' + '</div>\n' + '<div class="sentiment-review-box-info">\n' + '<div class="sentiment-review-box-name">' + comment.author + '</div>\n' + (comment.source.name ? '<span class="sentiment-review-box-link">' + comment.source.name + '</span>' : ' ') + '\n' + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-date">' + comment.date + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-body js-review-body">\n' + '<div class="sentiment-review-box-text js-review-text">' + comment.text + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-button">\n' + '<div class="sentiment-review-box-full js-review-full">Full review</div>\n' + '<div class="sentiment-review-box-favorite">\n' + '<button class="sentiment-review-box-like" type="button">\n' + '30<svg><use xlink:href="#like"></use></svg>\n' + '</button>\n' + '<button class="sentiment-review-box-dislike" type="button">\n' + '<svg><use xlink:href="#dislike"></use></svg>12\n' + '</button>\n' + '</div>\n' + '</div>\n' + '</div>')).appendTo(reviewList);
     });
     reviewBody = $('.js-review-body');
     reviewText = $('.js-review-text');
@@ -499,22 +503,30 @@ function init() {
 
   function loadReviews(page) {
     var data = {
-      action: 'load-comments',
+      action: params.action,
       bookmaker: params.bookmakerId,
       tag: params.tagId,
       count: params.count,
       slider: params.slider,
+      sources: params.sources,
       subTag: params.subTag,
+      drilldown: params.drilldown,
+      series: params.series,
       paginationTemplate: params.paginationTemplate
     };
     if (page && page > 1) data['page'] = 'page-' + page;
-    $.get(params.ajaxPath, data, function (response) {
+    console.log(data);
+    $.post(params.ajaxPath, data, function (response) {
       if (params.slider) {
         addCommentsSlider(response.comments);
       } else {
         addComments(response.comments);
       }
 
+      if (response.series) sentimentChart.update(response.series, true, true);
+      if (response.drilldown) sentimentChart.options.drilldown = highcharts__WEBPACK_IMPORTED_MODULE_0___default.a.merge(sentimentChart.options.drilldown, {
+        series: response.drilldown.series
+      });
       if (params.paginationTemplate) addPagination(response.pagination);
     }, 'json');
   }
@@ -713,6 +725,14 @@ function init() {
     modalTarget.forEach(function (modalTarget) {
       enableBodyScroll(modalTarget);
     });
+  });
+  sentimentSources.on('click', 'button', function (e) {
+    e.preventDefault();
+    sentimentSourcesItem.removeClass('is-select');
+    $(this).addClass('is-select');
+    params.action = 'all';
+    params.sources = parseInt($(this).attr('data-sources'));
+    loadReviews();
   });
 }
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
