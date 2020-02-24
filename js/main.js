@@ -19528,45 +19528,10 @@ module.exports = function (module) {
 /*!**********************************!*\
   !*** ../blocks/footer/script.js ***!
   \**********************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ "../../node_modules/js-cookie/src/js.cookie.js");
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);
-
-$(function () {
-  $('.block-sports.custom-toggle .block-sports__toggle').on('click', function (event) {
-    event.preventDefault();
-    var btn = $(this).find('.btn-title'),
-        title = btn.data('html');
-    btn.data('html', btn.text()).text(title);
-    $(this).closest('.block-sports').toggleClass('is-opened');
-  });
-  $(window).scroll(function () {
-    if ($(window).scrollTop() == $(document).height() - $(window).height()) {
-      $(document).trigger('end-page');
-    }
-  });
-  var cookieName = 'COUNT_SHOW_PAGE';
-  var currentCookie = parseInt(js_cookie__WEBPACK_IMPORTED_MODULE_0___default.a.get(cookieName));
-
-  if (!currentCookie) {
-    js_cookie__WEBPACK_IMPORTED_MODULE_0___default.a.set(cookieName, 1, {
-      expires: 60 * 60 * 24
-    });
-  } else {
-    js_cookie__WEBPACK_IMPORTED_MODULE_0___default.a.set(cookieName, ++currentCookie, {
-      expires: 60 * 60 * 24
-    });
-  }
-
-  if (currentCookie == 2) {
-    setTimeout("$(document).trigger('show-popup-banner')", 500);
-  }
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
+// import Cookies from "js-cookie";
 
 /***/ }),
 
@@ -19931,24 +19896,6 @@ $(function () {
       range.parent().addClass('is-success');
     }
   });
-  if (overviewBkMain.length === 0) return;
-  anchorTab.on('click', function () {
-    var html = $(document.body).add(document.documentElement),
-        anchorTag = $(this).attr('href'),
-        anchorPos = $('div' + anchorTag);
-
-    if (win.outerWidth() <= 1099) {
-      html.animate({
-        scrollTop: anchorPos.offset().top - 55
-      }, 500);
-    } else {
-      html.animate({
-        scrollTop: anchorPos.offset().top - 101
-      }, 500);
-    }
-
-    return false;
-  });
   var addReview = $('.reviews-add');
 
   function getFormData($form) {
@@ -19981,6 +19928,24 @@ $(function () {
         }
       });
     }
+  });
+  if (overviewBkMain.length === 0) return;
+  anchorTab.on('click', function () {
+    var html = $(document.body).add(document.documentElement),
+        anchorTag = $(this).attr('href'),
+        anchorPos = $('div' + anchorTag);
+
+    if (win.outerWidth() <= 1099) {
+      html.animate({
+        scrollTop: anchorPos.offset().top - 55
+      }, 500);
+    } else {
+      html.animate({
+        scrollTop: anchorPos.offset().top - 101
+      }, 500);
+    }
+
+    return false;
   });
   var ratingApp = $('.js-app-rating'),
       ratingCount = ratingApp.data('rating'),
@@ -20914,6 +20879,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _blocks_nav_script__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_blocks_nav_script__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _blocks_runet_script__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../blocks/runet/script */ "../blocks/runet/script.js");
 /* harmony import */ var _blocks_footer_script__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../blocks/footer/script */ "../blocks/footer/script.js");
+/* harmony import */ var _blocks_footer_script__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_blocks_footer_script__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var _blocks_rating_bk_script__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../blocks/rating-bk/script */ "../blocks/rating-bk/script.js");
 /* harmony import */ var _blocks_bk_search_script__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../blocks/bk-search/script */ "../blocks/bk-search/script.js");
 /* harmony import */ var _blocks_bk_search_script__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_blocks_bk_search_script__WEBPACK_IMPORTED_MODULE_8__);
