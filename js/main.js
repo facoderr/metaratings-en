@@ -19917,16 +19917,35 @@ $(function () {
     }), 1 == count) {
       var form = getFormData($(this));
       addReview.find('.text-danger').empty();
-      $.post('/include/ajax/add-review.handler.php', {
-        form: form
-      }, function (result) {
-        result = JSON.parse(result);
 
-        if (result['success']) {
-          addReview[0].reset();
-          $('#success').fadeIn().addClass('is-open');
-        }
-      });
+      if (overviewBkMain.length === 0) {
+        var settings = addReview.data('settings');
+        settings = $.extend({}, {
+          ajaxPath: '' // путь по которому будет происходить ajax запрос
+
+        }, settings);
+        $.post(settings.ajaxPath, {
+          form: form
+        }, function (result) {
+          result = JSON.parse(result);
+
+          if (result['success']) {
+            addReview[0].reset();
+            $('#success').fadeIn().addClass('is-open');
+          }
+        });
+      } else {
+        $.post('/include/ajax/add-review.handler.php', {
+          form: form
+        }, function (result) {
+          result = JSON.parse(result);
+
+          if (result['success']) {
+            addReview[0].reset();
+            $('#success').fadeIn().addClass('is-open');
+          }
+        });
+      }
     }
   });
   if (overviewBkMain.length === 0) return;
@@ -20889,34 +20908,71 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _blocks_modal_script__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_blocks_modal_script__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony import */ var _sprite__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./sprite */ "./sprite.js");
 /* harmony import */ var _sprite__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(_sprite__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var _blocks_reward_script__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../blocks/reward/script */ "../blocks/reward/script.js");
-/* harmony import */ var _blocks_overview_bk_script__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../blocks/overview-bk/script */ "../blocks/overview-bk/script.js");
-/* harmony import */ var _blocks_sentiment_script__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../blocks/sentiment/script */ "../blocks/sentiment/script.js");
+/* harmony import */ var _old__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./old */ "./old.js");
+/* harmony import */ var _blocks_reward_script__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../blocks/reward/script */ "../blocks/reward/script.js");
+/* harmony import */ var _blocks_overview_bk_script__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../blocks/overview-bk/script */ "../blocks/overview-bk/script.js");
+/* harmony import */ var _blocks_sentiment_script__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../blocks/sentiment/script */ "../blocks/sentiment/script.js");
 
 
 
 window.jQuery = jquery__WEBPACK_IMPORTED_MODULE_0___default.a;
 window.$ = jquery__WEBPACK_IMPORTED_MODULE_0___default.a;
-/** LIBS */
+/** LIBS **/
 
 
 
-/** CORE */
-
-
-
-
+/** CORE **/
 
 
 
 
 
 
-/** PAGES */
+
+
+
+
+/** OLD **/
+
+
+/** PAGES **/
 
 
 
  //import '../blocks/sentiment/sentiment';
+
+/***/ }),
+
+/***/ "./old.js":
+/*!****************!*\
+  !*** ./old.js ***!
+  \****************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var swiper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swiper */ "../../node_modules/swiper/dist/js/swiper.esm.bundle.js");
+
+$(function () {
+  new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".cols.swiper-container", {
+    slidesPerView: 2,
+    freeMode: !1,
+    spaceBetween: 0,
+    autoHeight: 1,
+    navigation: {
+      nextEl: "#neighbourR",
+      prevEl: "#neighbourL"
+    },
+    breakpoints: {
+      768: {
+        slidesPerView: "1",
+        spaceBetween: 13
+      }
+    }
+  });
+});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 

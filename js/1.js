@@ -58,6 +58,7 @@ function init() {
       sentimentPaginationBtn = '.js-more-sentiment',
       sentimentSources = $('.js-sources-sentiment'),
       sentimentSourcesItem = $('.js-sources-item'),
+      sentimentTone = '.js-sentiment-status',
       reviewList = $('.js-review-list'),
       reviewBody = $('.js-review-body'),
       reviewText = $('.js-review-text'),
@@ -82,7 +83,7 @@ function init() {
       sumPositive,
       sumNegative; // Sentiment Chart
 
-  var params = $('.sentiment-graph').data('settings');
+  var params = sentimentLoad.data('settings');
   params = $.extend({}, {
     action: 'load-comments',
     drilldown: [],
@@ -93,6 +94,7 @@ function init() {
     slider: false,
     count: 10,
     sources: 0,
+    status: 0,
     paginationTemplate: ''
   }, params);
   var sentimentChart = highcharts__WEBPACK_IMPORTED_MODULE_0___default.a.chart(sentiment, {
@@ -105,7 +107,7 @@ function init() {
         'fontFamily': 'Helvetica Neue, Helvetica, Arial, sans-serif',
         'z-index': '1'
       },
-      zoomType: 'xy',
+      zoomType: '',
       margin: [1, 1, null, 1],
       events: {
         render: function render() {
@@ -145,12 +147,13 @@ function init() {
           setTimeout(function () {
             var sentimentVal = sentimentChart.series[0].chart.drilldownLevels[0].pointOptions.y,
                 sentimentName = sentimentChart.drilldownLevels[0].pointOptions.name;
-            sentimentChart.update({
-              chart: {
-                zoomType: ''
-              }
-            });
             sentimentTool.css('display', 'flex');
+
+            if ($('.is-success.js-sentiment-status.is-select').length != 0) {
+              sentimentTool.find('.sentiment-graph-back-text').html('All positive entities');
+            } else {
+              sentimentTool.find('.sentiment-graph-back-text').html('All negative entities');
+            }
 
             if (sentimentVal >= 0) {
               sentimentTitle.addClass('is-success');
@@ -201,51 +204,26 @@ function init() {
         },
         drillup: function drillup() {
           setTimeout(function () {
-            sentimentChart.update({
-              chart: {
-                zoomType: 'xy'
+            if ($('.js-sentiment-status.is-select').length === 0) {
+              sentimentTool.hide();
+              sentimentTitle.removeClass('is-success is-danger').html('All entities');
+            } else {
+              sentimentTool.hide();
+              $('.sentiment-graph-tag').find(sentimentTool).css('display', 'flex');
+
+              if ($('.is-success.js-sentiment-status.is-select').length != 0) {
+                sentimentTitle.removeClass('is-success is-danger').html('All positive entities');
+                sentimentTool.find('.sentiment-graph-back-text').html('All entities');
+              } else {
+                sentimentTitle.removeClass('is-success is-danger').html('All negative entities');
+                sentimentTool.find('.sentiment-graph-back-text').html('All entities');
               }
-            });
-            sentimentTool.hide();
-            sentimentTitle.removeClass('is-success is-danger').html('All entities');
+            }
+
             sentimentScroll.html('');
             params.tagId = 0;
             loadReviews();
-            positiveArray = [];
-            negativeArray = [];
-            $(sentimentChart.series).each(function (i, serie) {
-              var parseMain = $.parseHTML('<a href="javascript:void(0);" class="sentiment-graph-item js-sentiment-item" data-series="' + i + '">' + serie.data[0].name + ' <span>(' + serie.zData[0] + ')</span></a>');
-              $(reviewGap).unwrap().remove();
-              setTimeout(function () {
-                reviewText.highlight(serie.data[0].name, i, 'sentiment-review-highlight js-review-highlight ' + serie.data[0].drilldown + '', 'js-review-gap');
-
-                if (serie.yData[0] >= 0) {
-                  positiveArray.push(serie.zData[0]);
-                  sumPositive = parseInt(eval(positiveArray.join('+')));
-                  sentimentTotalSuccess.html('');
-                  $($.parseHTML('' + sumPositive + '')).prependTo(sentimentTotalSuccess);
-                  $(parseMain).appendTo(sentimentScrollSuccess);
-                  $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-success');
-                } else {
-                  negativeArray.push(serie.zData[0]);
-                  sumNegative = parseInt(eval(negativeArray.join('+')));
-                  sentimentTotalDanger.html('');
-                  $($.parseHTML('' + sumNegative + '')).prependTo(sentimentTotalDanger);
-                  $(parseMain).appendTo(sentimentScrollDanger);
-                  $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-danger');
-                }
-
-                sentimentList.each(function () {
-                  $(this).find(sentimentScrollSuccess).parent().toggle(sentimentScrollSuccess.children().length != 0);
-                  $(this).find(sentimentScrollDanger).parent().toggle(sentimentScrollDanger.children().length != 0);
-                });
-              }, 1);
-            });
-            setTimeout(function () {
-              sentimentTotalSuccess.clone().prependTo(sentimentScrollSuccess);
-              sentimentTotalDanger.clone().prependTo(sentimentScrollDanger);
-              autoHeight();
-            }, 1);
+            afterLoad();
             chartSeries = $('.highcharts-series');
           }, 1);
         }
@@ -481,7 +459,7 @@ function init() {
   function addComments(comments) {
     reviewList.html('');
     $(comments).each(function (i, comment) {
-      $($.parseHTML(' <div class="sentiment-review-box ' + comment.classAppend + '">\n' + '<div class="sentiment-review-box-head">\n' + '<div class="sentiment-review-box-user">\n' + '<div class="sentiment-review-box-img">\n' + '<img src="/local/templates/main/img/icons/user.svg" alt="User" />\n' + '</div>\n' + '<div class="sentiment-review-box-info">\n' + '<div class="sentiment-review-box-name">' + comment.author + '</div>\n' + (comment.source.name ? '<span class="sentiment-review-box-link">' + comment.source.name + '</span>' : ' ') + '\n' + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-trusted">\n' + '<div class="sentiment-review-box-feedback">' + (comment.classAppend === 'is-success' ? 'Positive feedback' : 'Negative feedback') + '</div>\n' + '<div class="sentiment-review-box-check">trusted<img src="/local/templates/main/img/icons/check.svg" alt=""></div>\n' + '</div>\n' + '<div class="sentiment-review-box-date">' + comment.date + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-body js-review-body">\n' + '<div class="sentiment-review-box-text js-review-text">' + comment.text + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-button">\n' + '<div class="sentiment-review-box-full js-review-full">Full review</div>\n' + '<div class="sentiment-review-box-favorite">\n' + '<button class="sentiment-review-box-like" type="button">\n' + '30<svg><use xlink:href="#like"></use></svg>\n' + '</button>\n' + '<button class="sentiment-review-box-dislike" type="button">\n' + '<svg><use xlink:href="#dislike"></use></svg>12\n' + '</button>\n' + '</div>\n' + '</div>\n' + '</div>')).appendTo(reviewList);
+      $($.parseHTML(' <div class="sentiment-review-box ' + comment.classAppend + '">\n' + '<div class="sentiment-review-box-head">\n' + '<div class="sentiment-review-box-user">\n' + '<div class="sentiment-review-box-img">\n' + '<img src="/local/templates/main/img/icons/user.svg" alt="User" />\n' + '</div>\n' + '<div class="sentiment-review-box-info">\n' + '<div class="sentiment-review-box-name">' + comment.author + '</div>\n' + (comment.source.name ? '<span class="sentiment-review-box-link">' + comment.source.name + '</span>' : ' ') + '\n' + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-trusted">\n' + '<div class="sentiment-review-box-feedback">' + (comment.classAppend === 'is-success' ? 'Positive feedback' : 'Negative feedback') + '</div>\n' + '<div class="sentiment-review-box-check">trusted<img src="/local/templates/main/img/icons/check.svg" alt=""></div>\n' + '</div>\n' + '<div class="sentiment-review-box-date">' + comment.date + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-body js-review-body">\n' + '<div class="sentiment-review-box-text js-review-text">' + comment.text + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-button">\n' + '<div class="sentiment-review-box-full js-review-full">Full review</div>\n' + '</div>\n' + '</div>')).appendTo(reviewList);
     });
     reviewBody = $('.js-review-body');
     reviewText = $('.js-review-text');
@@ -509,12 +487,11 @@ function init() {
       slider: params.slider,
       sources: params.sources,
       subTag: params.subTag,
-      drilldown: params.drilldown,
-      series: params.series,
+      status: params.status,
       paginationTemplate: params.paginationTemplate
     };
     if (page && page > 1) data['page'] = 'page-' + page;
-    $.post(params.ajaxPath, data, function (response) {
+    $.get(params.ajaxPath, data, function (response) {
       if (params.slider) {
         addCommentsSlider(response.comments);
       } else {
@@ -577,35 +554,74 @@ function init() {
     $(document).find('meta[name=description]').attr('content', desc);
   }
 
-  $(sentimentChart.series).each(function (i, serie) {
-    var parseMain = $.parseHTML('<a href="javascript:void(0);" class="sentiment-graph-item js-sentiment-item" data-series="' + i + '">' + serie.data[0].name + ' <span>(' + serie.zData[0] + ')</span></a>');
-    reviewText.highlight(serie.data[0].name, i, 'sentiment-review-highlight js-review-highlight ' + serie.data[0].drilldown + '', 'js-review-gap');
+  function afterLoad() {
+    positiveArray = [];
+    negativeArray = [];
+    $(sentimentChart.series).each(function (i, serie) {
+      var parseMain = $.parseHTML('<a href="javascript:void(0);" class="sentiment-graph-item js-sentiment-item" data-series="' + i + '">' + serie.data[0].name + ' <span>(' + serie.zData[0] + ')</span></a>');
+      $(reviewGap).unwrap().remove();
+      setTimeout(function () {
+        reviewText.highlight(serie.data[0].name, i, 'sentiment-review-highlight js-review-highlight ' + serie.data[0].drilldown + '', 'js-review-gap');
 
-    if (serie.yData[0] >= 0) {
-      positiveArray.push(serie.zData[0]);
-      sumPositive = parseInt(eval(positiveArray.join('+')));
-      sentimentTotalSuccess.html('');
-      $($.parseHTML('' + sumPositive + '')).prependTo(sentimentTotalSuccess);
-      $(parseMain).appendTo(sentimentScrollSuccess);
-      $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-success');
+        if (serie.yData[0] >= 0) {
+          positiveArray.push(serie.zData[0]);
+          sumPositive = parseInt(eval(positiveArray.join('+')));
+          sentimentTotalSuccess.html('');
+          $($.parseHTML('' + sumPositive + '')).prependTo(sentimentTotalSuccess);
+          $(parseMain).appendTo(sentimentScrollSuccess);
+          $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-success');
+        } else {
+          negativeArray.push(serie.zData[0]);
+          sumNegative = parseInt(eval(negativeArray.join('+')));
+          sentimentTotalDanger.html('');
+          $($.parseHTML('' + sumNegative + '')).prependTo(sentimentTotalDanger);
+          $(parseMain).appendTo(sentimentScrollDanger);
+          $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-danger');
+        }
+
+        sentimentList.each(function () {
+          $(this).find(sentimentScrollSuccess).parent().toggle(sentimentScrollSuccess.children().length != 0);
+          $(this).find(sentimentScrollDanger).parent().toggle(sentimentScrollDanger.children().length != 0);
+        });
+      }, 1);
+    });
+    setTimeout(function () {
+      sentimentTotalSuccess.clone().prependTo(sentimentScrollSuccess);
+      sentimentTotalDanger.clone().prependTo(sentimentScrollDanger);
+      autoHeight();
+    }, 1);
+    sentimentLoad.addClass('is-load');
+  }
+
+  afterLoad();
+  doc.on('click', sentimentTone, function () {
+    var status = $(this).data('status');
+    params.status = status;
+    params.action = 'all';
+    loadReviews();
+    params.action = 'load-comments';
+    $(sentimentTone).removeClass('is-select');
+    $(this).addClass('is-select');
+    $('.sentiment-graph-tag').find(sentimentTool).css('display', 'flex');
+
+    if ($('.is-success.js-sentiment-status.is-select').length != 0) {
+      sentimentTitle.removeClass('is-success is-danger').html('All positive entities');
+      sentimentTool.find('.sentiment-graph-back-text').html('All entities');
     } else {
-      negativeArray.push(serie.zData[0]);
-      sumNegative = parseInt(eval(negativeArray.join('+')));
-      sentimentTotalDanger.html('');
-      $($.parseHTML('' + sumNegative + '')).prependTo(sentimentTotalDanger);
-      $(parseMain).appendTo(sentimentScrollDanger);
-      $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-danger');
+      sentimentTitle.removeClass('is-success is-danger').html('All negative entities');
+      sentimentTool.find('.sentiment-graph-back-text').html('All entities');
     }
 
-    sentimentList.each(function () {
-      $(this).find(sentimentScrollSuccess).parent().toggle(sentimentScrollSuccess.children().length > 0);
-      $(this).find(sentimentScrollDanger).parent().toggle(sentimentScrollDanger.children().length > 0);
-    });
-  });
-  sentimentTotalSuccess.clone().prependTo(sentimentScrollSuccess);
-  sentimentTotalDanger.clone().prependTo(sentimentScrollDanger);
-  autoHeight();
-  sentimentLoad.addClass('is-load'); // Interaction
+    sentimentScroll.html('');
+    afterLoad();
+    setTimeout(function () {
+      sentimentChart.update({
+        chart: {
+          zoomType: ''
+        }
+      });
+    }, 500);
+  }); // Interaction
 
   var sentimentFromMore = '.js-sentiment-from-more',
       sentimentFromBlock = $('.js-sentiment-from-block');
@@ -690,7 +706,30 @@ function init() {
   });
   if (sentimentPagination.length > 0) pagination();
   doc.on('click', sentimentBack, function () {
-    $('.highcharts-drillup-button').trigger('click');
+    if (sentimentChart.drillUpButton === undefined) {
+      if ($('.js-sentiment-status.is-select').length === 0) {
+        $('.highcharts-drillup-button').trigger('click');
+      } else {
+        params.status = 0;
+        params.action = 'all';
+        loadReviews();
+        params.action = 'load-comments';
+        $(sentimentTone).removeClass('is-select');
+        sentimentTool.hide();
+        sentimentTitle.removeClass('is-success is-danger').html('All entities');
+        sentimentScroll.html('');
+        afterLoad();
+        setTimeout(function () {
+          sentimentChart.update({
+            chart: {
+              zoomType: ''
+            }
+          });
+        }, 500);
+      }
+    } else {
+      $('.highcharts-drillup-button').trigger('click');
+    }
   });
   doc.on('click', sentimentFull, function () {
     var sentimentScrollHeight = $(this).siblings().outerHeight();
