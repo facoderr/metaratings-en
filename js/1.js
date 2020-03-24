@@ -58,7 +58,10 @@ function init() {
       sentimentPaginationBtn = '.js-more-sentiment',
       sentimentSources = $('.js-sources-sentiment'),
       sentimentSourcesItem = $('.js-sources-item'),
-      sentimentTone = '.js-sentiment-status',
+      sentimentTone = '.sentiment-graph-status',
+      sentimentBookmaker = '.js-bookmaker',
+      sentimentSourcesViewList = $('.js-sources-sentiment-view'),
+      sentimentSourcesHideList = $('.js-sources-list-hide'),
       reviewList = $('.js-review-list'),
       reviewBody = $('.js-review-body'),
       reviewText = $('.js-review-text'),
@@ -203,6 +206,7 @@ function init() {
           }, 1);
         },
         drillup: function drillup() {
+          sentimentLoad.removeClass('is-load');
           setTimeout(function () {
             if ($('.js-sentiment-status.is-select').length === 0) {
               sentimentTool.hide();
@@ -257,7 +261,7 @@ function init() {
         y: 30,
         style: {
           color: '#777777',
-          fontSize: '10px'
+          fontSize: '15px'
         }
       }
     },
@@ -318,14 +322,21 @@ function init() {
           useHTML: true,
           formatter: function formatter() {
             if (win.outerWidth() <= 1099) {
-              return '<span style="position:relative;bottom:-' + (this.point.marker.radius + 10) + 'px;">' + this.point.name + '</span>';
+              if (this.point.y >= 0) {
+                return '<span class="is-success" style="position:relative;bottom:-' + (this.point.marker.radius + 5) + 'px;">' + this.point.name + '</span>';
+              } else {
+                return '<span class="is-danger" style="position:relative;bottom:-' + (this.point.marker.radius + 5) + 'px;">' + this.point.name + '</span>';
+              }
             } else {
-              return '<span style="position:relative;bottom:-' + (this.point.marker.radius + 15) + 'px;">' + this.point.name + '</span>';
+              if (this.point.y >= 0) {
+                return '<span class="is-success" style="position:relative;bottom:-' + (this.point.marker.radius + 10) + 'px;">' + this.point.name + '</span>';
+              } else {
+                return '<span class="is-danger" style="position:relative;bottom:-' + (this.point.marker.radius + 10) + 'px;">' + this.point.name + '</span>';
+              }
             }
           },
           style: {
-            fontSize: '8px',
-            color: '#000000',
+            fontSize: '14px',
             textOutline: 'none'
           }
         },
@@ -335,9 +346,10 @@ function init() {
               if (sentimentChart.drillUpButton === undefined) {
                 $(sentimentChart.series).each(function (i, serie) {
                   $('' + sentimentItem + '[data-series=' + i + ']').toggleClass('is-hover', $('.highcharts-series-' + i + '.highcharts-series-hover').length > 0);
+                  $('.highcharts-series-hover').find('span').addClass('is-hover');
 
                   if ($('.highcharts-series-' + i + '.highcharts-series-hover').length > 0) {
-                    $('.widget-review-highlight').addClass('is-disable');
+                    $(reviewHighlight).addClass('is-disable');
                     $('' + reviewHighlight + '[data-series=' + i + ']').removeClass('is-disable');
                   } else {
                     $('' + reviewHighlight + '[data-series=' + i + ']').addClass('is-disable');
@@ -352,6 +364,7 @@ function init() {
             setTimeout(function () {
               if (sentimentChart.drillUpButton === undefined) {
                 $(sentimentItem).removeClass('is-hover');
+                $('.highcharts-label').find('span').removeClass('is-hover');
                 $(reviewHighlight).removeClass('is-disable');
               } else {
                 return false;
@@ -391,10 +404,24 @@ function init() {
             height: 250
           },
           xAxis: {
-            tickPixelInterval: 50
+            tickPixelInterval: 50,
+            labels: {
+              style: {
+                fontSize: '10px'
+              }
+            }
           },
           yAxis: {
             tickPixelInterval: 30
+          },
+          plotOptions: {
+            series: {
+              dataLabels: {
+                style: {
+                  fontSize: '8px'
+                }
+              }
+            }
           }
         }
       }]
@@ -459,7 +486,7 @@ function init() {
   function addComments(comments) {
     reviewList.html('');
     $(comments).each(function (i, comment) {
-      $($.parseHTML(' <div class="sentiment-review-box ' + comment.classAppend + '">\n' + '<div class="sentiment-review-box-head">\n' + '<div class="sentiment-review-box-user">\n' + '<div class="sentiment-review-box-img">\n' + '<img src="/local/templates/main/img/icons/user.svg" alt="User" />\n' + '</div>\n' + '<div class="sentiment-review-box-info">\n' + '<div class="sentiment-review-box-name">' + comment.author + '</div>\n' + (comment.source.name ? '<span class="sentiment-review-box-link">' + comment.source.name + '</span>' : ' ') + '\n' + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-trusted">\n' + '<div class="sentiment-review-box-feedback">' + (comment.classAppend === 'is-success' ? 'Positive feedback' : 'Negative feedback') + '</div>\n' + '<div class="sentiment-review-box-check">trusted<img src="/local/templates/main/img/icons/check.svg" alt=""></div>\n' + '</div>\n' + '<div class="sentiment-review-box-date">' + comment.date + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-body js-review-body">\n' + '<div class="sentiment-review-box-text js-review-text">' + comment.text + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-button">\n' + '<div class="sentiment-review-box-full js-review-full">Full review</div>\n' + '</div>\n' + '</div>')).appendTo(reviewList);
+      $($.parseHTML(' <div class="sentiment-review-box ' + comment.classAppend + '">\n' + '<div class="sentiment-review-box-head">\n' + '<div class="sentiment-review-box-user">\n' + '<div class="sentiment-review-box-img">\n' + '<img src="/local/templates/main/img/icons/user.svg" alt="User" />\n' + '</div>\n' + '<div class="sentiment-review-box-info">\n' + '<div class="sentiment-review-box-name">' + comment.author + '</div>\n' + (comment.source.name ? '<span class="sentiment-review-box-link">' + comment.source.name + '</span>' : ' ') + '\n' + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-trusted">\n' + '<div class="sentiment-review-box-feedback">' + (comment.classAppend === 'is-success' ? 'Positive feedback' : 'Negative feedback') + '</div>\n' + '<div class="sentiment-review-box-check">trusted<img src="/local/templates/main/img/icons/check.svg" alt=""></div>\n' + '</div>\n' + '<div class="sentiment-review-box-date">' + comment.date + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-body js-review-body">\n' + '<div class="sentiment-review-box-text js-review-text">' + comment.text + '</div>\n' + '</div>\n' + '<div class="sentiment-review-box-button">\n' + '<div class="sentiment-review-box-full js-review-full">Full review</div>\n' + '<div class="sentiment-review-box-favorite" data-id="' + comment.id + '">\n' + '<button class="sentiment-review-box-like js-review-like" data-type="like" type="button">\n' + '<span>' + comment.like + '</span>\n' + '<svg>\n' + '<use xlink:href="#like"></use>\n' + '</svg>\n' + '</button>\n' + '<button class="sentiment-review-box-dislike js-review-like" data-type="dislike" type="button">\n' + '<svg>\n' + '<use xlink:href="#dislike"></use>\n' + '</svg>\n' + '<span>' + comment.dislike + '</span>\n' + '</button>\n' + '</div>\n' + '</div>\n' + '</div>')).appendTo(reviewList);
     });
     reviewBody = $('.js-review-body');
     reviewText = $('.js-review-text');
@@ -498,12 +525,36 @@ function init() {
         addComments(response.comments);
       }
 
+      if (!sentimentLoad.hasClass('is-load')) sentimentLoad.addClass('is-load');
       if (response.series) sentimentChart.update(response.series, true, true);
       if (response.drilldown) sentimentChart.options.drilldown = highcharts__WEBPACK_IMPORTED_MODULE_0___default.a.merge(sentimentChart.options.drilldown, {
         series: response.drilldown.series
       });
+      if (response.sources) addSource(response.sources);
       if (params.paginationTemplate) addPagination(response.pagination);
     }, 'json');
+  }
+
+  function addSource(arSources) {
+    sentimentSourcesViewList.html('');
+    sentimentSourcesHideList.html('');
+    var viewArSources = arSources.slice(0, 4),
+        hideArSources = arSources.slice(4),
+        sentimentFromMore = $('.sentiment-from-more.js-sentiment-from-more');
+    sentimentFromMore.hide();
+
+    for (var i = 0; i < viewArSources.length; i++) {
+      $($.parseHTML('<button class="sentiment-from-item js-sources-item" type="button"\n' + 'data-sources="' + viewArSources[i].id + '">\n' + (viewArSources[i].img ? '<img src="' + viewArSources[i].img['SRC'] + '"/>' : '<span>' + viewArSources[i].name + '</span>') + '\n' + '</button>\n')).appendTo(sentimentSourcesViewList);
+    }
+
+    if (hideArSources.length > 0) {
+      sentimentFromMore.show();
+      sentimentFromMore.html(hideArSources.length + ' more<span>reviews</span>');
+
+      for (var _i = 0; _i < hideArSources.length; _i++) {
+        $($.parseHTML('<button class="sentiment-from-item js-sources-item" type="button"  data-sources="' + hideArSources[_i].id + '">\n' + (hideArSources[_i].img ? ' <img src="' + hideArSources[_i].img['SRC'] + '"/>' : '<span>' + hideArSources[_i].name + '</span>') + '\n' + '</button>\n')).appendTo(sentimentSourcesHideList);
+      }
+    }
   }
 
   function pagination() {
@@ -583,14 +634,14 @@ function init() {
           $(this).find(sentimentScrollSuccess).parent().toggle(sentimentScrollSuccess.children().length != 0);
           $(this).find(sentimentScrollDanger).parent().toggle(sentimentScrollDanger.children().length != 0);
         });
-      }, 1);
+      }, 500);
     });
     setTimeout(function () {
       sentimentTotalSuccess.clone().prependTo(sentimentScrollSuccess);
       sentimentTotalDanger.clone().prependTo(sentimentScrollDanger);
       autoHeight();
-    }, 1);
-    sentimentLoad.addClass('is-load');
+      sentimentLoad.addClass('is-load');
+    }, 500);
   }
 
   afterLoad();
@@ -598,6 +649,7 @@ function init() {
     var status = $(this).data('status');
     params.status = status;
     params.action = 'all';
+    sentimentLoad.removeClass('is-load');
     loadReviews();
     params.action = 'load-comments';
     $(sentimentTone).removeClass('is-select');
@@ -621,6 +673,16 @@ function init() {
         }
       });
     }, 500);
+  });
+  doc.on('click', sentimentBookmaker, function () {
+    $(sentimentBookmaker).removeClass('is-select');
+    params.bookmakerId = $(this).attr('data-id');
+    $(this).addClass('is-select');
+    params.action = 'all';
+    sentimentLoad.removeClass('is-load');
+    loadReviews();
+    params.action = 'load-comments';
+    return false;
   }); // Interaction
 
   var sentimentFromMore = '.js-sentiment-from-more',
@@ -633,14 +695,14 @@ function init() {
       chartLabel = '.highcharts-label';
   doc.on('click', sentimentItem, function () {
     var seriesVal = $(this).data('series'),
-        idVal = $(this).data('id');
+        tagId = $(this).data('id');
 
     if (sentimentChart.drillUpButton === undefined) {
       sentimentChart.series[seriesVal].data[0].doDrilldown();
     } else {
       $(sentimentItem).removeClass('is-focus');
       $(this).addClass('is-focus');
-      params.tagId = idVal;
+      params.tagId = tagId;
       loadReviews();
       return false;
     }
@@ -651,11 +713,13 @@ function init() {
     if (sentimentChart.drillUpButton === undefined) {
       chartSeries.toggleClass('highcharts-series-inactive');
       $('.highcharts-series-' + seriesVal).removeClass('highcharts-series-inactive');
+      $('.highcharts-series-' + seriesVal).find('span').toggleClass('is-hover');
       $(reviewHighlight).toggleClass('is-disable');
       $('' + reviewHighlight + '[data-series=' + seriesVal + ']').removeClass('is-disable');
     } else {
       $(chartPoint).toggleClass('is-disable');
       $(chartPoint).eq(seriesVal).removeClass('highcharts-point-hover is-disable');
+      $('.highcharts-data-label:nth-child(' + (seriesVal + 1) + ')').find('span').toggleClass('is-hover');
       $(reviewHighlight).toggleClass('is-disable');
       $('' + reviewHighlight + '[data-series=' + seriesVal + ']').removeClass('is-disable');
     }
@@ -684,6 +748,7 @@ function init() {
       $(sentimentChart.series[0].data).each(function (i, data) {
         var condition = $(chartPoint).eq(i).hasClass('highcharts-point-hover');
         $('' + sentimentItem + '[data-series=' + i + ']').toggleClass('is-hover', condition);
+        $('.highcharts-label-hover').find('span').addClass('is-hover');
 
         if (condition) {
           $(chartPoint).addClass('is-disable');
@@ -700,7 +765,7 @@ function init() {
     } else {
       $(sentimentItem).removeClass('is-hover');
       $(chartPoint).removeClass('highcharts-point-hover is-disable');
-      $(chartLabel).removeClass('highcharts-label-hover');
+      $(chartLabel).removeClass('highcharts-label-hover').find('span').removeClass('is-hover');
       $(reviewHighlight).removeClass('is-disable');
     }
   });
@@ -712,6 +777,7 @@ function init() {
       } else {
         params.status = 0;
         params.action = 'all';
+        sentimentLoad.removeClass('is-load');
         loadReviews();
         params.action = 'load-comments';
         $(sentimentTone).removeClass('is-select');
@@ -768,8 +834,10 @@ function init() {
     sentimentSourcesItem.removeClass('is-select');
     $(this).addClass('is-select');
     params.action = 'all';
+    sentimentLoad.removeClass('is-load');
     params.sources = parseInt($(this).attr('data-sources'));
     loadReviews();
+    params.action = 'load-comments';
   });
 }
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "../../node_modules/jquery/dist/jquery.js")))
