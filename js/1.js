@@ -227,7 +227,6 @@ function init() {
             sentimentScroll.html('');
             params.tagId = 0;
             loadReviews();
-            afterLoad();
             chartSeries = $('.highcharts-series');
           }, 1);
         }
@@ -532,6 +531,7 @@ function init() {
       });
       if (response.sources) addSource(response.sources);
       if (params.paginationTemplate) addPagination(response.pagination);
+      if (response) afterLoad();
     }, 'json');
   }
 
@@ -665,7 +665,6 @@ function init() {
     }
 
     sentimentScroll.html('');
-    afterLoad();
     setTimeout(function () {
       sentimentChart.update({
         chart: {
@@ -784,7 +783,6 @@ function init() {
         sentimentTool.hide();
         sentimentTitle.removeClass('is-success is-danger').html('All entities');
         sentimentScroll.html('');
-        afterLoad();
         setTimeout(function () {
           sentimentChart.update({
             chart: {
